@@ -6,7 +6,7 @@ Lightweight web UI to quickly inspect a local Reshapr control plane and tools ex
 
 This project provides a minimal local dashboard to:
 
-- list available Reshapr configurations;
+- list available [Reshapr](https://reshapr.io/) configurations;
 - list Reshapr expositions;
 - query an MCP endpoint to retrieve available tools (`initialize` then `tools/list`).
 
