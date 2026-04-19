@@ -6,18 +6,17 @@ Lightweight web UI to quickly inspect a local Reshapr control plane and tools ex
 
 This project provides a minimal local dashboard to:
 
-- list available [Reshapr](https://reshapr.io/) configurations;
-- list Reshapr expositions;
-- query an MCP endpoint to retrieve available tools (`initialize` then `tools/list`).
+- list configuration plans from PostgreSQL (`configuration_plans`, joined with `services`);
+- list expositions from PostgreSQL (same shape as the CLI `expo list`: service, configuration plan, gateways);
+- list MCP tools from PostgreSQL (artifact `RESHAPR_CUSTOM_TOOLS` or `services_operations` filtered by `included_operations`).
 
 Everything is handled by a single Node.js script: `scripts/control-plane-ui.mjs`.
 
 ## Prerequisites
 
 - Node.js 18+ (or a recent version with global `fetch`);
-- `reshapr` binary available in your `PATH`;
-- a local Reshapr control plane (default: `http://localhost:5555`);
-- an accessible MCP endpoint.
+- a local Reshapr control plane URL for display only (default: `http://localhost:5555`);
+- Docker with the `reshapr-postgres` container (all lists and MCP metadata are read from PostgreSQL).
 
 ## Run the UI
 
@@ -55,42 +54,33 @@ node scripts/control-plane-ui.mjs
 
 ## How It Works
 
-### 1) Configurations and expositions
+### 1) Configurations and expositions (PostgreSQL)
 
-The "Load" buttons call local HTTP endpoints:
+The **Charger (DB)** buttons call:
 
-- `GET /api/configurations`
-- `GET /api/expositions`
+- `GET /api/configurations` — rows from `configuration_plans` with optional nested `service` (`services`);
+- `GET /api/expositions` — rows built from `expositions` + `services` + `configuration_plans` + aggregated `gateways` (via `gateway_groups` / `gateways_gateway_groups`).
 
-These routes execute the `reshapr` CLI with JSON output:
+Both responses include `"source": "postgresql"`.
 
-- configurations: tries `reshapr config list -o json`, then falls back to `reshapr config ls -o json`;
-- expositions: tries `reshapr expo list -o json`, then falls back to `reshapr expo ls -o json`.
+### 2) MCP URLs and tools from PostgreSQL
 
-The script normalizes several output formats (`result`, `items`, `data`, raw array).
+Use **"List MCP URL (DB)"** to retrieve MCP URLs from PostgreSQL joins (`expositions`, `services`, `gateway_groups`, `gateways_gateway_groups`, `gateways`). Click a URL to fill the MCP URL field.
 
-### 2) MCP Tools
+Use **"List tools (DB)"** to resolve the exposition for that MCP URL (organization, service name, version, gateway FQDN), then load tools from the database:
 
-Use **"List MCP URL"** to discover MCP endpoints extracted from the exposition payload, then click one to fill the MCP URL input.
+- if an artifact `RESHAPR_CUSTOM_TOOLS` exists for the service, tools are parsed from its YAML `customTools` (filtered by `configuration_plans.included_operations` when that list is non-empty);
+- otherwise, tools are built from `services_operations` rows whose `name` is listed in `included_operations`.
 
-The "List tools" button calls:
-
-- `GET /api/mcp-tools?url=<endpoint>`
-
-The server then performs two JSON-RPC requests against the target endpoint:
-
-1. `initialize`
-2. `tools/list`
-
-The response is shown both as raw JSON and as pills (tool names).
+The API response includes `source` (`artifacts_custom_tools` or `services_operations`) and `expo_id` for traceability.
 
 ## Exposed Local API
 
 - `GET /`: HTML UI page;
-- `GET /api/configurations`: `{ items: [...] }`;
-- `GET /api/expositions`: `{ items: [...] }`;
-- `GET /api/mcp-urls`: `{ urls: [...] }`;
-- `GET /api/mcp-tools?url=...`: `{ tools: [...] }`.
+- `GET /api/configurations`: `{ items: [...], source: "postgresql" }`;
+- `GET /api/expositions`: `{ items: [...], source: "postgresql" }`;
+- `GET /api/mcp-urls-db`: `{ urls: [...], items: [...] }`;
+- `GET /api/mcp-tools-db?url=...`: `{ tools: [...], source: string, expo_id: string }`.
 
 On errors, routes return a structured JSON payload:
 
@@ -100,15 +90,13 @@ On errors, routes return a structured JSON payload:
 
 ## Troubleshooting
 
-- **`Impossible de lister ... via reShapr CLI`**
-  - make sure the `reshapr` command is installed and available in your `PATH`.
-- **MCP error (`MCP error` or `Reponse non-JSON`)**
-  - check the MCP URL;
-  - verify the endpoint accepts JSON-RPC POST requests.
+- **Database / Docker errors**
+  - ensure the `reshapr-postgres` container is running and reachable from the machine running this UI;
+  - all reads use `docker exec reshapr-postgres psql -U reshapr -d reshapr ...`.
 - **Port already in use**
   - change `UI_PORT` before running the script.
 
 ## Known Limitations
 
 - intentionally simple UI, with no authentication or persistence;
-- `CONTROL_PLANE_URL` is currently informational (shown in the header), while list retrieval relies on the `reshapr` CLI.
+- `CONTROL_PLANE_URL` is informational (shown in the header); data is loaded from PostgreSQL via Docker, not from the control plane HTTP API.
