@@ -9,9 +9,9 @@ This workspace hosts a lightweight UI used to inspect a local Reshapr control pl
 
 ## Current scope
 
-- Main script: `scripts/control-plane-ui.mjs`
-- Default UI URL: `http://localhost:555`
-- Control plane base URL: `http://localhost:5555`
+- PostgreSQL UI: `scripts/control-plane-ui.mjs` — default `http://localhost:555` (data via Docker `reshapr-postgres`)
+- CLI-only UI: `scripts/control-plane-cli-ui.mjs` — default `http://localhost:1556` (`reshapr` CLI; second screen for comparison)
+- Control plane base URL (display): `http://localhost:5555`
 - Example MCP endpoint: `http://localhost:7777/mcp/reshapr/BlazeMeter+API/4`
 
 ## Functional goal

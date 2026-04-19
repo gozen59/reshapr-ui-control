@@ -8,48 +8,68 @@ This project provides a minimal local dashboard to:
 
 - list configuration plans from PostgreSQL (`configuration_plans`, joined with `services`);
 - list expositions from PostgreSQL (same shape as the CLI `expo list`: service, configuration plan, gateways);
-- list MCP tools from PostgreSQL (artifact `RESHAPR_CUSTOM_TOOLS` or `services_operations` filtered by `included_operations`).
+- list MCP tools from PostgreSQL (artifact `RESHAPR_CUSTOM_TOOLS` or `services_operations` filtered by `included_operations`);
+- optionally run a **second UI** on another port that mirrors the same views using **only the `reshapr` CLI** (for side-by-side comparison).
 
-Everything is handled by a single Node.js script: `scripts/control-plane-ui.mjs`.
+Two Node.js scripts are provided:
+
+- `scripts/control-plane-ui.mjs` — **PostgreSQL** (Docker `reshapr-postgres`), default **http://localhost:555**;
+- `scripts/control-plane-cli-ui.mjs` — **`reshapr` CLI only**, default **http://localhost:1556** (second écran / comparaison).
 
 ## Prerequisites
 
 - Node.js 18+ (or a recent version with global `fetch`);
 - a local Reshapr control plane URL for display only (default: `http://localhost:5555`);
-- Docker with the `reshapr-postgres` container (all lists and MCP metadata are read from PostgreSQL).
+- Docker with the `reshapr-postgres` container for **`control-plane-ui.mjs`** (PostgreSQL);
+- the **`reshapr`** CLI on your `PATH` for **`control-plane-cli-ui.mjs`** (CLI + HTTP MCP for tools only).
 
-## Run the UI
+## Run the UIs
 
-From the project root:
+**Base de données** (port 555 par défaut) :
 
 ```bash
 node scripts/control-plane-ui.mjs
 ```
 
-Then open:
+Open **http://localhost:555**.
 
-```text
-http://localhost:555
+**CLI** (port 1556 par défaut, autre onglet / écran) :
+
+```bash
+node scripts/control-plane-cli-ui.mjs
 ```
 
-On startup, the script logs:
+Open **http://localhost:1556**.
 
-- the UI URL;
-- the control plane target.
+On startup, each script logs its URL and the control plane display target.
 
 ## Environment Variables
 
 The following values are optional:
 
+**PostgreSQL UI** (`control-plane-ui.mjs`):
+
 - `UI_PORT`: web UI port (default: `555`);
 - `CONTROL_PLANE_URL`: control plane URL displayed in the UI (default: `http://localhost:5555`).
 
-Example:
+**CLI UI** (`control-plane-cli-ui.mjs`):
+
+- `CLI_UI_PORT`: web UI port (default: `1556`);
+- `CONTROL_PLANE_URL`: same as above;
+- `DB_UI_PORT`: port shown in the CLI UI banner as the link to the DB UI (default: `555`, should match `UI_PORT` of the other process).
+
+Examples:
 
 ```bash
 UI_PORT=8080 \
 CONTROL_PLANE_URL=http://localhost:9000 \
 node scripts/control-plane-ui.mjs
+```
+
+```bash
+CLI_UI_PORT=5560 \
+DB_UI_PORT=8080 \
+node scripts/control-plane-cli-ui.mjs
 ```
 
 ## How It Works
@@ -74,7 +94,20 @@ Use **"List tools (DB)"** to resolve the exposition for that MCP URL (organizati
 
 The API response includes `source` (`artifacts_custom_tools` or `services_operations`) and `expo_id` for traceability.
 
-## Exposed Local API
+### 3) CLI-only UI (`control-plane-cli-ui.mjs`)
+
+- **Configurations / expositions** : `reshapr config list` / `reshapr expo list` (with fallbacks `ls` where supported).
+- **MCP URLs** : `expo list` puis pour chaque id `expo get`, parsing de la ligne `Endpoints:` (pas PostgreSQL).
+- **Tools** : HTTP JSON-RPC `initialize` + `tools/list` sur l’URL MCP (non disponible via la CLI `reshapr`).
+
+Local API for the CLI UI:
+
+- `GET /api/configurations` — `{ items: [...], source: "cli" }`;
+- `GET /api/expositions` — `{ items: [...], source: "cli" }`;
+- `GET /api/mcp-urls` — `{ urls: [...], source: "cli" }`;
+- `GET /api/mcp-tools?url=...` — `{ tools: [...], source: "http_mcp" }`.
+
+## Exposed Local API (PostgreSQL UI, port `UI_PORT`)
 
 - `GET /`: HTML UI page;
 - `GET /api/configurations`: `{ items: [...], source: "postgresql" }`;
@@ -94,7 +127,9 @@ On errors, routes return a structured JSON payload:
   - ensure the `reshapr-postgres` container is running and reachable from the machine running this UI;
   - all reads use `docker exec reshapr-postgres psql -U reshapr -d reshapr ...`.
 - **Port already in use**
-  - change `UI_PORT` before running the script.
+  - change `UI_PORT` or `CLI_UI_PORT` so the two servers do not bind the same port.
+- **CLI UI errors**
+  - ensure `reshapr` is installed and works (`reshapr config list -o json`, `reshapr expo list -o json`).
 
 ## Known Limitations
 
