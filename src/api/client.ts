@@ -102,8 +102,13 @@ export function apiClient() {
   return {
     base,
     listServices: () => json<unknown[]>('/api/v1/services'),
+    listServicesPage: (page: number, size: number) =>
+      json<unknown[]>(`/api/v1/services?page=${page}&size=${size}`),
     getService: (id: string) => json<unknown>(`/api/v1/services/${id}`),
     deleteService: (id: string) => empty(`/api/v1/services/${id}`, { method: 'DELETE' }),
+
+    listArtifactsByService: (serviceId: string) =>
+      json<unknown[]>(`/api/v1/artifacts/service/${serviceId}`),
 
     importArtifactFile: async (file: File, extra?: Record<string, string>) => {
       const fd = new FormData()
@@ -187,6 +192,15 @@ export function apiClient() {
     listExpositionsActive: () => json<unknown[]>('/api/v1/expositions/active'),
     getExposition: (id: string) => json<unknown>(`/api/v1/expositions/${id}`),
     getActiveExposition: (id: string) => json<unknown>(`/api/v1/expositions/active/${id}`),
+    /** 404 → null (exposition sans gateway actif), aligné sur le comportement `expo get` côté CLI. */
+    getActiveExpositionOrNull: async (id: string): Promise<unknown | null> => {
+      const res = await fetch(`${base}/api/v1/expositions/active/${id}`, {
+        headers: authHeaders(),
+      })
+      if (res.status === 404) return null
+      if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status)
+      return res.json() as Promise<unknown>
+    },
     createExposition: (body: { configurationPlanId: string; gatewayGroupId: string }) =>
       json<unknown>('/api/v1/expositions', {
         method: 'POST',

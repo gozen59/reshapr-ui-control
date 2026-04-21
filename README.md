@@ -2,7 +2,7 @@
 
 **Purpose:** this project exists to provide a **web UI** for [Reshapr](https://github.com/reshaprio/reshapr) — a browser-based console for the control plane that complements the **Reshapr CLI** from the same GitHub repository, without replacing it (same REST surface, different workflows).
 
-Web console (SPA) for the **Reshapr control plane**: same REST endpoints as the CLI (`/api/config`, `/auth/login/reshapr`, `/api/v1/...`).
+Web console (SPA) for the **Reshapr control plane**: same REST endpoints as the CLI (`/api/config`, `/auth/login/reshapr`, `/api/v1/...`). La page **MCP custom tools** (`/mcp-custom-tools`) résout les outils déclarés dans l’artifact `RESHAPR_CUSTOM_TOOLS` à partir d’une URL MCP, comme le ferait une inspection alignée sur le control-plane.
 
 ## Prerequisites
 
