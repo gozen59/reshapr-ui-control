@@ -1,32 +1,33 @@
 ---
-description: Contexte reshapr-ui-control — API CLI, CORS, auth, docs locales
+description: reshapr-ui-control context — CLI API, CORS, auth, local docs
 globs: "**/*"
 alwaysApply: true
 ---
 
-# reshapr-ui-control — contexte agent
+# reshapr-ui-control — agent context
 
-## Dépôts
+## Repositories
 
-- **Ce workspace** : SPA console pour le control-plane Reshapr (`src/api/client.ts` = mêmes endpoints que le CLI).
-- **Backend / CLI** (clone typique) : `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr` — `control-plane/`, `cli/`.
+- **This workspace**: SPA console for the Reshapr control plane (`src/api/client.ts` = same endpoints as the CLI).
+- **Backend / CLI** (typical clone): `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr` — `control-plane/`, `cli/`.
 
-## Lire en priorité
+## Read first
 
-1. `docs/CHAT_SESSION_SUMMARY.md` — historique et décisions.
-2. `docs/plans/api_cli_et_ui_web.md` — plan API / UI archivé.
-3. `docs/reshapr-WEB_UI.md` — architecture auth, CORS, MVP.
-4. `docs/reshapr-control-plane-CORS.md` — extrait `application.properties`.
-5. `docs/CURSOR_USER_RULES.md` — préférences utilisateur / agent.
-6. `docs/ARCHITECTURE.md` — variables Vite, Option B, session.
+1. `docs/CHAT_SESSION_SUMMARY.md` — history and decisions.
+2. `docs/plans/api_cli_et_ui_web.md` — archived API / UI plan.
+3. `docs/reshapr-WEB_UI.md` — auth architecture, CORS, MVP.
+4. `docs/reshapr-control-plane-CORS.md` — `application.properties` excerpt.
+5. `docs/CURSOR_USER_RULES.md` — user / agent preferences (archive).
+6. `docs/ARCHITECTURE.md` — Vite env vars, Option B, session.
 
-## Règles techniques rapides
+## Quick technical rules
 
-- Auth on-prem : `POST /auth/login/reshapr` → token en `sessionStorage` ; header `Authorization: Bearer` sur `/api/v1/*`.
-- SaaS : OAuth non implémenté dans l’UI ; message sur l’écran login.
-- CORS : variable d’environnement `RESHAPR_HTTP_CORS_ORIGINS` sur le **control-plane** Quarkus ; origine Vite souvent `http://localhost:5173`.
-- Mise à jour **plans** et **secrets** : **PUT** (aligné Quarkus + CLI), pas PATCH.
+- On-prem auth: `POST /auth/login/reshapr` → token in `sessionStorage`; `Authorization: Bearer` on `/api/v1/*`.
+- SaaS: OAuth not implemented in the UI; message on the login screen.
+- CORS: `RESHAPR_HTTP_CORS_ORIGINS` on the Quarkus **control plane**; Vite origin often `http://localhost:5173`.
+- **Plans** and **secrets** updates: **PUT** (aligned with Quarkus + CLI), not PATCH.
 
-## Langue
+## Language
 
-- Réponses à l’utilisateur en **français** sauf demande contraire.
+- **Documentation** in this repository is in **English**.
+- When replying to the user, follow the language they use in the conversation.

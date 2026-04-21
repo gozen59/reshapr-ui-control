@@ -1,39 +1,39 @@
-# Règles utilisateur (archive pour agents — workspace reshapr-ui-control)
+# User rules (archive for agents — reshapr-ui-control workspace)
 
-Le texte ci-dessous reprend les **user rules** et instructions système pertinentes fournies dans la conversation d’origine, pour guider un agent travaillant dans **reshapr-ui-control** ou sur des sujets liés.
+The text below reproduces **user rules** and relevant system instructions from the original conversation, to guide an agent working in **reshapr-ui-control** or on related topics.
 
 ---
 
-## Suivre toutes les instructions
+## Follow all instructions
 
-- Appliquer **complètement** les instructions utilisateur, outil, système et skills.
-- Lorsqu’un format, une structure ou un workflow est imposé par une règle ou une description d’outil, **le respecter**.
-- Les **skills** Cursor : les lire et suivre quand ils sont pertinents (chemins sous `~/.cursor/skills-cursor/` dans l’environnement utilisateur).
-- Utiliser les **MCP** quand ils aident à la tâche.
+- Apply **fully** user, tool, system, and skill instructions.
+- When a rule or tool description mandates a format, structure, or workflow, **follow it**.
+- **Cursor skills**: read and follow them when relevant (paths under `~/.cursor/skills-cursor/` in the user environment).
+- Use **MCP** tools when they help the task.
 
-## Environnement réel
+## Real environment
 
-- Environnement **réel** avec shell et réseau : **exécuter** les commandes, ne pas se contenter de dire à l’utilisateur quoi lancer.
-- Ne pas abandonner après une seule erreur : diagnostiquer, alternatives, retry.
-- La date « Today » fournie dans le contexte utilisateur est **autoritative** (ex. 2026).
+- **Real** environment with shell and network: **run** commands; do not only tell the user what to run.
+- Do not give up after one error: diagnose, try alternatives, retry.
+- The “Today” date provided in user context is **authoritative** (e.g. 2026).
 
-## Communication avec l’utilisateur (préférences)
+## Communication with the user (preferences)
 
-- Réponses en **français** (règle utilisateur de la session d’origine).
-- Citations de code existant : blocs avec format `startLine:endLine:filepath` quand on cite le dépôt **reshapr** ; dans ce repo, préférer chemins clairs ou liens vers `docs/`.
-- Liens markdown : **URL complètes** pour le web ; chemins de fichiers complets quand utile.
-- Style : phrases complètes, clair, proportionné à la tâche ; pas de remplissage inutile ; bannières d’engagement en fin de message à éviter.
+- **Language**: follow the language the user uses in each conversation (the original session preferred French).
+- Code citations for the **reshapr** repo: blocks with `startLine:endLine:filepath`; in this repo, prefer clear paths or links under `docs/`.
+- Markdown links: **full URLs** for the web; full file paths when useful.
+- Style: full sentences, clear, proportional to the task; avoid filler and engagement bait at the end of messages.
 
-## Code (principes)
+## Code (principles)
 
-- Modifier **uniquement** ce qui est nécessaire à la tâche ; pas de refactor gratuit ni fichiers non liés.
-- Lire le contexte avant d’écrire ; **imiter** le style du projet.
-- Chaque ligne du diff doit servir la demande ; pas de commentaires verbeux ni doc markdown **non demandée** (sauf transfert explicite comme ici).
+- Change **only** what the task requires; no gratuitous refactors or unrelated files.
+- Read context before writing; **match** project style.
+- Every line in the diff should serve the request; no verbose comments or unsolicited markdown docs (except explicit handoffs like this archive).
 
 ## Agent transcripts
 
-- Les transcripts parent peuvent être cités sous la forme indiquée par Cursor ; ne pas exposer la structure interne des dossiers d’agents.
+- Parent transcripts may be cited in the form indicated by Cursor; do not expose internal agent folder layout.
 
 ---
 
-*(Fin de l’archive des règles session. Ajuster localement via `.cursor/rules/` si le projet évolue.)*
+*(End of session rules archive. Adjust locally via `.cursor/rules/` as the project evolves.)*

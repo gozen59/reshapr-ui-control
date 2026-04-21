@@ -1,79 +1,79 @@
-# Interface web et APIs control-plane (copie pour le workspace reshapr-ui-control)
+# Web UI and control-plane APIs (copy for the reshapr-ui-control workspace)
 
-**Source canonique** : dépôt reshapr — `docs/WEB_UI.md`  
-**Clone de référence** : `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr/`
+**Canonical source**: reshapr repo — `docs/WEB_UI.md`  
+**Reference clone**: `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr/`
 
-Les liens relatifs vers `../cli/` ou `../control-plane/` du document d’origine correspondent à ce chemin racine **reshapr**.
+Relative links to `../cli/` or `../control-plane/` in the original document refer to that **reshapr** root path.
 
 ---
 
-# Interface web et APIs control-plane
+# Web UI and control-plane APIs
 
-Ce document matérialise les choix d’architecture pour une UI web consommant les mêmes APIs que le CLI, la configuration CORS associée, et le périmètre MVP recommandé.
+This document captures architecture choices for a web UI consuming the same APIs as the CLI, the associated CORS configuration, and the recommended MVP scope.
 
-## 1. Hébergement et authentification (décision)
+## 1. Hosting and authentication (decision)
 
-### Option retenue pour l’intégration micepe / SPA distante : **Option B — application web séparée**
+### Chosen option for micepe / remote SPA integration: **Option B — separate web application**
 
-- La SPA (par ex. dans le dépôt **micepe** ou **reshapr-ui-control**) est servie sur son propre origine (domaine / port).
-- Elle appelle le control-plane via `fetch` en HTTPS, avec les mêmes endpoints que le CLI (`/api/config`, `/auth/login/reshapr`, `/api/v1/...`).
-- **Avantages** : cycle de release indépendant, stack front libre, pas d’alourdir le JAR Quarkus.
-- **Inconvénient** : nécessite une liste d’origines CORS explicites côté control-plane (voir `application.properties` et la variable `RESHAPR_HTTP_CORS_ORIGINS`).
+- The SPA (e.g. in **micepe** or **reshapr-ui-control**) is served on its own origin (domain / port).
+- It calls the control plane via `fetch` over HTTPS using the same endpoints as the CLI (`/api/config`, `/auth/login/reshapr`, `/api/v1/...`).
+- **Pros**: independent release cycle, free choice of front stack, no Quarkus JAR bloat.
+- **Con**: requires an explicit list of allowed CORS origins on the control plane (see `application.properties` and `RESHAPR_HTTP_CORS_ORIGINS`).
 
-### Option alternative : **Option A — UI embarquée dans le control-plane**
+### Alternative: **Option A — UI embedded in the control plane**
 
-- Build front → fichiers statiques sous `control-plane/src/main/resources/META-INF/resources/`.
-- **Avantages** : même origine, pas de CORS navigateur, déploiement unique.
-- **Quand la préférer** : distribution « appliance » ou absence de portail existant.
+- Front build → static files under `control-plane/src/main/resources/META-INF/resources/`.
+- **Pros**: same origin, no browser CORS, single deployment.
+- **When to prefer it**: “appliance” distribution or no existing portal.
 
-### Stratégie d’authentification pour le MVP : **alignement CLI (Bearer en mémoire)**
+### MVP authentication strategy: **CLI alignment (Bearer in memory)**
 
-- Après `POST /auth/login/reshapr` (on-prem) ou le flux OAuth SaaS, la SPA conserve le JWT (ou token) **en mémoire** (ou `sessionStorage`) et l’envoie en `Authorization: Bearer …` sur `/api/v1/*`, comme le CLI (`reshapr/cli/src/utils/config.ts`).
-- **Évolution recommandée** : un **BFF** (Backend-for-Frontend) ou cookies `HttpOnly` si le mot de passe ne doit jamais transiter vers le navigateur ou si l’on veut réduire la surface XSS sur les tokens à longue durée de vie.
+- After `POST /auth/login/reshapr` (on-prem) or the SaaS OAuth flow, the SPA keeps the JWT (or token) **in memory** (or `sessionStorage`) and sends `Authorization: Bearer …` on `/api/v1/*`, like the CLI (`reshapr/cli/src/utils/config.ts`).
+- **Recommended evolution**: a **BFF** (Backend-for-Frontend) or `HttpOnly` cookies if passwords must never reach the browser or XSS exposure on long-lived tokens should be reduced.
 
-## 2. CORS et sécurité HTTP
+## 2. CORS and HTTP security
 
 ### Configuration
 
-- Le filtre CORS Quarkus est activé (`quarkus.http.cors=true`).
-- Les origines autorisées sont pilotées par **`RESHAPR_HTTP_CORS_ORIGINS`** (liste séparée par des virgules). En l’absence de variable, des origines **localhost** courantes pour le dev SPA peuvent être utilisées (voir `reshapr/control-plane/src/main/resources/application.properties`).
-- **Production** : définir explicitement `RESHAPR_HTTP_CORS_ORIGINS` avec uniquement les origines du front.
+- Quarkus CORS filter is enabled (`quarkus.http.cors=true`).
+- Allowed origins are driven by **`RESHAPR_HTTP_CORS_ORIGINS`** (comma-separated list). If unset, common **localhost** origins for SPA dev may apply (see `reshapr/control-plane/src/main/resources/application.properties`).
+- **Production**: set `RESHAPR_HTTP_CORS_ORIGINS` explicitly to front-end origins only.
 
-### Revue ciblée des routes sensibles
+### Targeted review of sensitive routes
 
-- **`/api/v1/*`** : annotées `@Authenticated` ; accès avec Bearer JWT.
-- **`/api/admin/*`** : protégées par `@AdminAuthenticated` (clé API admin), hors usage CLI standard.
-- **`/api/config`** : bootstrap public (mode SaaS / on-prem, version).
-- **`POST /auth/login/reshapr`** : authentification on-prem.
-- **`quarkus.http.auth.proactive=false`** : authentification « paresseuse ».
+- **`/api/v1/*`**: annotated `@Authenticated`; access with Bearer JWT.
+- **`/api/admin/*`**: protected by `@AdminAuthenticated` (admin API key), outside standard CLI usage.
+- **`/api/config`**: public bootstrap (SaaS / on-prem mode, version).
+- **`POST /auth/login/reshapr`**: on-prem authentication.
+- **`quarkus.http.auth.proactive=false`**: lazy authentication.
 
-Les en-têtes et méthodes CORS autorisés incluent au minimum `Authorization`, `Content-Type`, et les verbes utilisés par le CLI (GET, POST, PUT, PATCH, DELETE, OPTIONS).
+Allowed CORS headers and methods include at least `Authorization`, `Content-Type`, and the verbs used by the CLI (GET, POST, PUT, PATCH, DELETE, OPTIONS).
 
-## 3. Périmètre MVP UI (écrans et APIs)
+## 3. MVP UI scope (screens and APIs)
 
-Objectif : couvrir le parcours « importer → plan → exposer » et la gestion courante, en réutilisant les **mêmes DTO / chemins** que le CLI.
+Goal: cover “import → plan → expose” and day-to-day management, reusing the **same DTOs / paths** as the CLI.
 
-| Priorité | Écran ou flux | Endpoints (relatif à l’URL du control-plane) | Référence CLI |
-|----------|----------------|-----------------------------------------------|----------------|
-| P0 | Bootstrap / choix mode | `GET /api/config` | `login.ts`, `info.ts` |
-| P0 | Connexion on-prem | `POST /auth/login/reshapr` | `login.ts` |
-| P0 | Liste services | `GET /api/v1/services` | `service.ts` |
-| P0 | Détail / suppression service | `GET/DELETE /api/v1/services/{id}` | `service.ts` |
+| Priority | Screen or flow | Endpoints (relative to control plane URL) | CLI reference |
+|----------|----------------|--------------------------------------------|---------------|
+| P0 | Bootstrap / mode selection | `GET /api/config` | `login.ts`, `info.ts` |
+| P0 | On-prem sign-in | `POST /auth/login/reshapr` | `login.ts` |
+| P0 | Service list | `GET /api/v1/services` | `service.ts` |
+| P0 | Service detail / delete | `GET/DELETE /api/v1/services/{id}` | `service.ts` |
 | P0 | Import artifact | `POST /api/v1/artifacts` | `import.ts` |
-| P0 | Attacher un artifact | `POST /api/v1/artifacts/attach` | `attach.ts` |
-| P0 | Plans de configuration | `GET/POST /api/v1/configurationPlans`, `GET/PUT/DELETE .../{id}`, `POST .../renewApiKey` | `import.ts`, `config.ts` |
+| P0 | Attach artifact | `POST /api/v1/artifacts/attach` | `attach.ts` |
+| P0 | Configuration plans | `GET/POST /api/v1/configurationPlans`, `GET/PUT/DELETE .../{id}`, `POST .../renewApiKey` | `import.ts`, `config.ts` |
 | P0 | Expositions | `GET/POST /api/v1/expositions`, `GET/DELETE .../{id}`, `GET /api/v1/expositions/active`, `GET .../active/{id}` | `import.ts`, `expo.ts` |
 | P1 | Secrets | `GET /api/v1/secrets/refs`, CRUD `/api/v1/secrets` | `secret.ts` |
-| P1 | Groupes de gateways | `GET/POST /api/v1/gatewayGroups`, `DELETE .../{id}` | `gateway-group.ts` |
-| P1 | Quotas tenant | `GET /api/v1/quotas` | `quotas.ts` |
-| P1 | Jetons API | `POST/GET /api/v1/tokens/apiTokens`, `DELETE .../{tokenId}` | `api-token.ts` |
-| — | Hors MVP console | `reshapr run` / GitHub, Docker local | `run.ts`, `stop.ts`, `status.ts` |
+| P1 | Gateway groups | `GET/POST /api/v1/gatewayGroups`, `DELETE .../{id}` | `gateway-group.ts` |
+| P1 | Tenant quotas | `GET /api/v1/quotas` | `quotas.ts` |
+| P1 | API tokens | `POST/GET /api/v1/tokens/apiTokens`, `DELETE .../{tokenId}` | `api-token.ts` |
+| — | Outside console MVP | `reshapr run` / GitHub, local Docker | `run.ts`, `stop.ts`, `status.ts` |
 
-### Hors périmètre MVP console
+### Outside console MVP
 
-- Administration globale (`/api/admin/*`, setup E2E).
-- Démarrage local des conteneurs Reshapr (`run` / `stop` / `status`).
+- Global admin (`/api/admin/*`, E2E setup).
+- Local Reshapr container lifecycle (`run` / `stop` / `status`).
 
 ---
 
-Pour la liste exhaustive des chemins utilisés par le CLI, voir aussi `docs/plans/api_cli_et_ui_web.md` et les `fetch` sous `reshapr/cli/src/commands/`.
+For the exhaustive list of paths used by the CLI, see also `docs/plans/api_cli_et_ui_web.md` and `fetch` calls under `reshapr/cli/src/commands/`.
