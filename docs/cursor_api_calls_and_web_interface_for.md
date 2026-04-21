@@ -5,17 +5,17 @@ _Exported on 21/04/2026 at 14:13:31 UTC+2 from Cursor (3.1.15)_
 
 **User**
 
-il s'agit là du code source de reshapr que nous utilisons dans le projet /Users/tmathias/WORKSPACE/DISNEY/AI_TOPICS/micepe. Essaies de retrouver les api que le CLI (@cli/ )appelle et voir si on pourrait ajouter une interface WEB je suppose sur le control-plane (@control-plane/ )
+This is the reshapr source code we use in the project /Users/tmathias/WORKSPACE/DISNEY/AI_TOPICS/micepe. Please find which APIs the CLI (@cli/) calls and whether we could add a WEB interface, I assume on the control plane (@control-plane/).
 
 ---
 
 **Cursor**
 
-Explorant le dépôt reshapr pour cartographier les appels API du CLI et évaluer l’ajout d’une interface web sur le control-plane.
+Exploring the reshapr repo to map CLI API calls and assess adding a web UI on the control plane.
 
 
 
-Cartographie complète : le CLI appelle quasi exclusivement le control-plane Quarkus (REST). `run`/`stop`/`status` n’appellent pas le control-plane (GitHub + Docker). Nous rédigeons le plan.
+Full map: the CLI calls almost exclusively the Quarkus control plane (REST). `run`/`stop`/`status` do not call the control plane (GitHub + Docker). Drafting the plan.
 
 
 
@@ -31,137 +31,136 @@ To-do's from the plan have already been created. Do not create them again. Mark 
 
 **Cursor**
 
-Implémentant le plan : examen de la configuration actuelle, puis application des décisions d'architecture, de la configuration CORS et de la définition du périmètre MVP.
+Implementing the plan: reviewing current configuration, then applying architecture decisions, CORS configuration, and MVP scope definition.
 
 
 
-Création de la documentation d'architecture et renforcement de la configuration CORS dans `application.properties`.
+Creating architecture documentation and tightening CORS configuration in `application.properties`.
 
 
 
-Voici ce qui a été livré pour respecter le plan (sans modifier le fichier de plan).
+Here is what was delivered to satisfy the plan (without editing the plan file itself).
 
-## 1. Décision hébergement + auth ([`docs/WEB_UI.md`](docs/WEB_UI.md))
+## 1. Hosting + auth decision ([`docs/WEB_UI.md`](docs/WEB_UI.md))
 
-- **Option B** retenue pour une SPA séparée (ex. **micepe**) : même API que le CLI, releases front indépendantes.
-- **Option A** (UI statique dans le control-plane) documentée comme variante « appliance ».
-- **Auth MVP** : même modèle que le CLI — **Bearer en mémoire** après login ; **BFF / cookies HttpOnly** indiqués comme évolution.
+- **Option B** chosen for a separate SPA (e.g. **micepe**): same API as the CLI, independent front-end releases.
+- **Option A** (static UI inside the control plane) documented as an “appliance” variant.
+- **MVP auth**: same model as the CLI — **Bearer in memory** after login; **BFF / HttpOnly cookies** noted as a future step.
 
-## 2. CORS + sécurité ([`control-plane/src/main/resources/application.properties`](control-plane/src/main/resources/application.properties))
+## 2. CORS + security ([`control-plane/src/main/resources/application.properties`](control-plane/src/main/resources/application.properties))
 
-- `quarkus.http.cors.origins` via **`RESHAPR_HTTP_CORS_ORIGINS`**, avec défaut **localhost** (5173 / 3000, IPv4 et hostname) pour le dev SPA.
-- Méthodes : `GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS`.
-- En-têtes : `accept`, `accept-language`, `authorization`, `content-type`, `origin`, `x-requested-with`.
+- `quarkus.http.cors.origins` via **`RESHAPR_HTTP_CORS_ORIGINS`**, with default **localhost** (5173 / 3000, IPv4 and hostname) for SPA dev.
+- Methods: `GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS`.
+- Headers: `accept`, `accept-language`, `authorization`, `content-type`, `origin`, `x-requested-with`.
 - `quarkus.http.cors.access-control-max-age=24H`.
 
-La section « CORS et sécurité HTTP » du doc rappelle de fixer **`RESHAPR_HTTP_CORS_ORIGINS`** en prod et résume `/api/config`, `/auth/login/reshapr`, `/api/v1/*`, `/api/admin/*`.
+The “CORS and HTTP security” section of the doc reminds you to set **`RESHAPR_HTTP_CORS_ORIGINS`** in production and summarizes `/api/config`, `/auth/login/reshapr`, `/api/v1/*`, `/api/admin/*`.
 
-`./mvnw validate` sur `control-plane` se termine avec succès.
+`./mvnw validate` on `control-plane` completes successfully.
 
-## 3. Périmètre MVP ([`docs/WEB_UI.md`](docs/WEB_UI.md))
+## 3. MVP scope ([`docs/WEB_UI.md`](docs/WEB_UI.md))
 
-Tableau **P0 / P1** : bootstrap, login, services, import/attach, plans, expositions, puis secrets, gateway groups, quotas, API tokens, avec liens vers les commandes CLI correspondantes et ce qui reste hors MVP (admin, `run`/`stop`/`status`).
+**P0 / P1** table: bootstrap, login, services, import/attach, plans, expositions, then secrets, gateway groups, quotas, API tokens, with links to matching CLI commands and what stays outside MVP (admin, `run`/`stop`/`status`).
 
-Les trois todos sont marqués **complétés**.
+All three todos are marked **completed**.
 
 ---
 
 **User**
 
-construis moi cela dans le repertoire /Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control en ouvrant une autre fenetre pour un agent autonome. Tu pousseras le plan defini dans ce nouveau workspace
+Build this in the directory /Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control by opening another window for an autonomous agent. Push the plan defined into this new workspace.
 
 ---
 
 **Cursor**
 
-Création du projet `reshapr-ui-control` dans le chemin indiqué et intégration du plan. Nous ne pouvons pas ouvrir une autre fenêtre Cursor depuis ici — ouvrez « Fichier > Ouvrir le dossier » sur `reshapr-ui-control` pour y lancer un agent séparé.
+Creating the `reshapr-ui-control` project at the given path and integrating the plan. We cannot open another Cursor window from here — use **File → Open Folder** on `reshapr-ui-control` to run a separate agent there.
 
 
 
-Création du projet Vite + React + TypeScript et des fichiers sources.
+Creating the Vite + React + TypeScript project and source files.
 
 
 
-Ajout du plan, de l'architecture et de l'application complète (routes, API client, pages P0 et P1).
+Adding the plan, architecture, and full application (routes, API client, P0 and P1 pages).
 
 
 
-Écriture des fichiers sources de l'application.
+Writing the application source files.
 
 
 
-Voici ce qui a été mis en place.
+Here is what was set up.
 
-## Emplacement
+## Location
 
 **`/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control`**
 
-Projet **Vite + React + TypeScript** avec `react-router-dom`, build `npm run build` OK.
+**Vite + React + TypeScript** project with `react-router-dom`; `npm run build` succeeds.
 
-## Contenu livré
+## Delivered content
 
-| Élément | Rôle |
-|--------|------|
-| [`PLAN.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/PLAN.md) | Plan API / faisabilité (celui que vous aviez validé). |
-| [`docs/ARCHITECTURE.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/ARCHITECTURE.md) | Option B, auth Bearer, CORS, MVP. |
-| [`README.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/README.md) | Démarrage, CORS, note pour ouvrir le dossier dans Cursor. |
+| Item | Role |
+|------|------|
+| [`PLAN.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/PLAN.md) | API plan / feasibility (the one you had approved). |
+| [`docs/ARCHITECTURE.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/ARCHITECTURE.md) | Option B, Bearer auth, CORS, MVP. |
+| [`README.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/README.md) | Getting started, CORS, note about opening the folder in Cursor. |
 | [`.env.example`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/.env.example) | `VITE_RESHAPR_SERVER`. |
-| `src/api/client.ts` | Client HTTP aligné sur le CLI (config, login, v1). |
-| Pages | Login (on‑prem), services, artifacts (fichier/URL + attach), plans (liste / nouveau / détail JSON + renew key), expositions (actives/toutes + détail + active), secrets, gateway groups, quotas, jetons API. |
+| `src/api/client.ts` | HTTP client aligned with the CLI (config, login, v1). |
+| Pages | Login (on‑prem), services, artifacts (file/URL + attach), plans (list / new / JSON detail + renew key), expositions (active/all + detail + active), secrets, gateway groups, quotas, API tokens. |
 
-## Autre fenêtre / agent autonome
+## Second window / autonomous agent
 
-Je ne peux pas ouvrir une seconde fenêtre Cursor depuis ici. Pour un **agent dans un workspace dédié** :
+I cannot open a second Cursor window from here. For an **agent in a dedicated workspace**:
 
-1. **Fichier → Ouvrir le dossier…** → `reshapr-ui-control`  
-2. Lancer l’agent dans ce dossier (il n’aura pas le dépôt `reshapr` sauf si vous l’ajoutez en workspace multi-root).
+1. **File → Open Folder…** → `reshapr-ui-control`  
+2. Run the agent in that folder (it will not have the `reshapr` repo unless you add it in a multi-root workspace).
 
-## Lancer l’UI
+## Run the UI
 
 ```bash
 cd /Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control
 npm run dev
 ```
 
-Configurer le control-plane avec une origine CORS qui correspond à l’URL de Vite (souvent `http://localhost:5173`), via `RESHAPR_HTTP_CORS_ORIGINS` comme dans **reshapr**.
+Configure the control plane with a CORS origin matching the Vite URL (often `http://localhost:5173`), via `RESHAPR_HTTP_CORS_ORIGINS` as in **reshapr**.
 
 ---
 
 **User**
 
-envoie le contenu de ce chat, des cursorrules, plans et toutes informations pertinentes dans le nouveau workspace
+Send the content of this chat, cursor rules, plans, and all relevant information into the new workspace.
 
 ---
 
 **Cursor**
 
-Rassemblant les règles Cursor, le plan et la documentation pertinente, puis les copiant dans `reshapr-ui-control`.
+Gathering Cursor rules, the plan, and relevant documentation, then copying them into `reshapr-ui-control`.
 
 
 
-Création des documents de transfert dans `reshapr-ui-control` : règles Cursor, plan complet, copie de `WEB_UI.md`, résumé de session et règles utilisateur.
+Creating handoff documents in `reshapr-ui-control`: Cursor rules, full plan, `WEB_UI.md` copy, session summary, and user rules.
 
 
 
-Tout est centralisé dans **`/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control`**.
+Everything is centralized under **`/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control`**.
 
-## Point d’entrée
+## Entry point
 
-- **[`docs/README.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/README.md)** : tableau de bord de la doc transférée (liens vers chaque fichier).
+- **[`docs/README.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/README.md)** — index of transferred documentation (links to each file).
 
-## Fichiers ajoutés ou mis à jour
+## Files added or updated
 
-| Fichier | Rôle |
-|--------|------|
-| [`docs/CHAT_SESSION_SUMMARY.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/CHAT_SESSION_SUMMARY.md) | Résumé du fil de discussion : cartographie CLI, plan, changements **reshapr**, création **reshapr-ui-control**, note PUT vs PATCH. |
-| [`docs/CURSOR_USER_RULES.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/CURSOR_USER_RULES.md) | Archive des **user rules** (instructions, français, code, MCP, etc.). |
-| [`docs/plans/api_cli_et_ui_web.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/plans/api_cli_et_ui_web.md) | Plan Cursor **`api_cli_et_ui_web_786aed26`** (frontmatter + corps + correction PUT + diagramme mermaid). |
-| [`docs/reshapr-WEB_UI.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/reshapr-WEB_UI.md) | Copie de **`reshapr/docs/WEB_UI.md`** avec racine explicite du clone. |
-| [`docs/reshapr-control-plane-CORS.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/reshapr-control-plane-CORS.md) | Extrait **`application.properties`** CORS du control-plane. |
-| [`.cursor/rules/reshapr-ui-control.mdc`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/.cursor/rules/reshapr-ui-control.mdc) | Règle Cursor **alwaysApply** : chemins dépôts, docs à lire, rappels techniques + français. |
-| [`docs/ARCHITECTURE.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/ARCHITECTURE.md), [`README.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/README.md), [`PLAN.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/PLAN.md) | Liens mis à jour vers **`docs/README.md`**. |
+| File | Role |
+|------|------|
+| [`docs/CHAT_SESSION_SUMMARY.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/CHAT_SESSION_SUMMARY.md) | Discussion thread summary: CLI map, plan, **reshapr** changes, **reshapr-ui-control** creation, PUT vs PATCH note. |
+| [`docs/CURSOR_USER_RULES.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/CURSOR_USER_RULES.md) | Archive of **user rules** (instructions, language, code, MCP, etc.). |
+| [`docs/plans/api_cli_et_ui_web.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/plans/api_cli_et_ui_web.md) | Cursor plan **`api_cli_et_ui_web_786aed26`** (frontmatter + body + PUT correction + mermaid diagram). |
+| [`docs/reshapr-WEB_UI.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/reshapr-WEB_UI.md) | Copy of **`reshapr/docs/WEB_UI.md`** with explicit clone root. |
+| [`docs/reshapr-control-plane-CORS.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/reshapr-control-plane-CORS.md) | Control plane **`application.properties`** CORS excerpt. |
+| [`.cursor/rules/reshapr-ui-control.mdc`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/.cursor/rules/reshapr-ui-control.mdc) | **alwaysApply** Cursor rule: repo paths, docs to read, technical reminders + language. |
+| [`docs/ARCHITECTURE.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/docs/ARCHITECTURE.md), [`README.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/README.md), [`PLAN.md`](file:///Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr-ui-control/PLAN.md) | Links updated to **`docs/README.md`**. |
 
-**Remarque** : il n’y avait pas de `.cursor/rules` dans le dépôt **reshapr** ; les règles viennent de la session (user rules + nouvelle règle projet **reshapr-ui-control**). Les **skills** globaux restent sous `~/.cursor/skills-cursor/` sur ta machine ; ils ne sont pas dupliqués en fichiers dans ce repo (seule une mention dans `CURSOR_USER_RULES.md`).
+**Note**: there was no `.cursor/rules` in the **reshapr** repo; rules come from the session (user rules + new **reshapr-ui-control** project rule). Global **skills** remain under `~/.cursor/skills-cursor/` on your machine; they are not duplicated as files in this repo (only a mention in `CURSOR_USER_RULES.md`).
 
-En ouvrant le dossier **reshapr-ui-control** dans une nouvelle fenêtre Cursor, l’agent chargera **`.cursor/rules/reshapr-ui-control.mdc`** et pourra s’appuyer sur **`docs/README.md`**.
-
+When you open the **reshapr-ui-control** folder in a new Cursor window, the agent will load **`.cursor/rules/reshapr-ui-control.mdc`** and can rely on **`docs/README.md`**.

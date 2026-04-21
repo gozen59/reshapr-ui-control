@@ -1,24 +1,24 @@
-# Architecture reshapr-ui-control
+# reshapr-ui-control architecture
 
-**Index** : voir [`docs/README.md`](./README.md) pour la liste complète des documents transférés (chat, plan, règles, WEB_UI, CORS).
+**Index**: see [`docs/README.md`](./README.md) for the full list of transferred documents (chat, plan, rules, WEB_UI, CORS).
 
-## Relation avec reshapr
+## Relationship to reshapr
 
-- Control-plane Quarkus : dépôt **reshapr** (`control-plane/`, `cli/`).
-- Configuration CORS côté serveur : variable `RESHAPR_HTTP_CORS_ORIGINS` + `application.properties` (voir reshapr `docs/WEB_UI.md`).
+- Quarkus control plane: **reshapr** repo (`control-plane/`, `cli/`).
+- Server-side CORS configuration: `RESHAPR_HTTP_CORS_ORIGINS` + `application.properties` (see reshapr `docs/WEB_UI.md`).
 
-## Variables d’environnement (Vite)
+## Environment variables (Vite)
 
-| Variable | Rôle |
+| Variable | Role |
 |----------|------|
-| `VITE_RESHAPR_SERVER` | URL du control-plane par défaut dans l’UI (ex. `http://localhost:5555`). L’utilisateur peut la modifier avant connexion. |
+| `VITE_RESHAPR_SERVER` | Default control plane URL in the UI (e.g. `http://localhost:5555`). The user can change it before signing in. |
 
-## Authentification
+## Authentication
 
-- **On-premises** : `POST {server}/auth/login/reshapr` puis stockage du token + URL serveur en `sessionStorage`.
-- **SaaS** : flux OAuth du CLI non reproduit ici ; message dans l’écran de connexion.
+- **On-premises**: `POST {server}/auth/login/reshapr` then store token + server URL in `sessionStorage`.
+- **SaaS**: CLI OAuth flow not reproduced here; message on the login screen.
 
-## Périmètre MVP (implémenté en navigation)
+## MVP scope (implemented in navigation)
 
-- **P0** : bootstrap affiché au login, services, import / attach artifacts, plans, expositions (liste active + toutes + création + détail + suppression).
-- **P1** : secrets, groupes gateway, quotas, jetons API.
+- **P0**: bootstrap on login, services, import / attach artifacts, plans, expositions (active list + all + create + detail + delete).
+- **P1**: secrets, gateway groups, quotas, API tokens.

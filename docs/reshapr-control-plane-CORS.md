@@ -1,10 +1,10 @@
-# Extrait CORS — dépôt reshapr (control-plane)
+# CORS excerpt — reshapr repo (control plane)
 
-Chemin du fichier sur la machine de référence :
+Path to the file on the reference machine:
 
 `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr/control-plane/src/main/resources/application.properties`
 
-Extrait pertinent (tel que présent après l’implémentation du plan) :
+Relevant excerpt (as present after the plan implementation):
 
 ```properties
 quarkus.http.cors=true
@@ -16,4 +16,4 @@ quarkus.http.cors.access-control-max-age=24H
 quarkus.http.auth.proactive=false
 ```
 
-En production : définir `RESHAPR_HTTP_CORS_ORIGINS` avec l’origine exacte du front (HTTPS).
+In production: set `RESHAPR_HTTP_CORS_ORIGINS` to the exact front-end origin (HTTPS).
