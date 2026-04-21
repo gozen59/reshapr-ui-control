@@ -72,18 +72,6 @@ export function McpCustomToolsPage() {
         <h1>MCP — Custom tools</h1>
       </header>
 
-      <p className="muted small">
-        <strong>Règle :</strong> uniquement des appels HTTP au control-plane (comme la CLI officielle{' '}
-        <a href="https://github.com/reshaprio/reshapr" target="_blank" rel="noreferrer">
-          reshaprio/reshapr
-        </a>
-        ), sans PostgreSQL ni invocation <code>reshapr</code> en sous-processus. Les URLs MCP suivent{' '}
-        <code>cli/src/utils/format.ts</code> (<code>formatEndpoint</code>) ; la liste des URLs repose sur{' '}
-        <code>GET /api/v1/expositions/active</code> (équivalent <code>expo list</code>) ou sur{' '}
-        <code>GET /api/v1/expositions</code> + <code>GET /api/v1/expositions/active/&#123;id&#125;</code> pour chaque
-        exposition.
-      </p>
-
       <section className="card">
         <h2 className="small" style={{ marginTop: 0 }}>
           URLs MCP
