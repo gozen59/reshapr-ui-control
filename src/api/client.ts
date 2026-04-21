@@ -209,8 +209,11 @@ export function apiClient() {
       }),
     deleteExposition: (id: string) => empty(`/api/v1/expositions/${id}`, { method: 'DELETE' }),
 
+    /** Même appel que `reshapr secret list` : {@link https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/secret.ts secret.ts} */
     listSecretRefs: () => json<unknown[]>('/api/v1/secrets/refs'),
-    listSecrets: () => json<unknown[]>('/api/v1/secrets'),
+    /** Liste paginée complète (SecretDTO) — distincte de la CLI ; peut échouer selon la version / données du control-plane. */
+    listSecrets: (page = 0, size = 20) =>
+      json<unknown[]>(`/api/v1/secrets?page=${page}&size=${size}`),
     getSecret: (id: string) => json<unknown>(`/api/v1/secrets/${id}`),
     createSecret: (body: unknown) =>
       json<unknown>('/api/v1/secrets', {
