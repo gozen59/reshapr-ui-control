@@ -27,6 +27,9 @@ export function Layout() {
           <NavLink to="/expositions" className={navClass}>
             Expositions
           </NavLink>
+          <NavLink to="/mcp-custom-tools" className={navClass}>
+            MCP custom tools
+          </NavLink>
           <NavLink to="/secrets" className={navClass}>
             Secrets
           </NavLink>
