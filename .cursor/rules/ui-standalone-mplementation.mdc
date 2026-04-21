@@ -1,0 +1,32 @@
+---
+description: UI implementation and coding conventions
+globs: scripts/**/*.mjs
+alwaysApply: false
+---
+
+# UI Implementation Conventions
+
+When editing `scripts/control-plane-ui.mjs` or related UI scripts:
+
+- Keep dependencies minimal; prefer Node built-ins unless a package is clearly needed.
+- Keep endpoints explicit and configurable with env vars:
+  - `UI_PORT`
+  - `CONTROL_PLANE_URL`
+  - `DEFAULT_MCP_URL`
+- For MCP discovery, always perform:
+  1. `initialize`
+  2. `tools/list`
+- Return structured JSON errors from API routes with clear messages.
+- Preserve French-friendly UI labels unless product direction changes.
+
+## Reliability
+
+- Support both `reshapr config list` and `reshapr config ls`.
+- Support both `reshapr expo list` and `reshapr expo ls`.
+- Fail gracefully when CLI commands are unavailable.
+
+## UX
+
+- Keep a simple single-page dashboard layout.
+- Show count summaries (configs, expositions, tools).
+- Keep raw JSON visible for quick debugging.

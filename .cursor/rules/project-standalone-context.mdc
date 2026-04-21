@@ -1,0 +1,29 @@
+---
+description: Reshapr UI control project context
+alwaysApply: true
+---
+
+# reshapr-ui-control
+
+This workspace hosts a lightweight UI used to inspect a local Reshapr control plane and MCP endpoints.
+
+## Current scope
+
+- PostgreSQL UI: `scripts/control-plane-ui.mjs` — default `http://localhost:555` (data via Docker `reshapr-postgres`)
+- CLI-only UI: `scripts/control-plane-cli-ui.mjs` — default `http://localhost:1556` (`reshapr` CLI; second screen for comparison)
+- Control plane base URL (display): `http://localhost:5555`
+- Example MCP endpoint: `http://localhost:7777/mcp/reshapr/BlazeMeter+API/4`
+
+## Functional goal
+
+The UI should help operators:
+
+- list Reshapr configurations
+- list Reshapr expositions
+- list available MCP tools from a selected endpoint (`initialize` + `tools/list`)
+
+## Safety and behavior
+
+- Keep this tool read-focused by default (inspection and diagnostics first).
+- Avoid embedding secrets/tokens in code or docs.
+- Use environment variables for configurable URLs and credentials.
