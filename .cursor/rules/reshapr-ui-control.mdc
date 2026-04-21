@@ -1,5 +1,5 @@
 ---
-description: reshapr-ui-control context — CLI API, CORS, auth, local docs
+description: reshapr-ui-control context — CLI API, CORS, auth, project docs
 globs: "**/*"
 alwaysApply: true
 ---
@@ -8,15 +8,15 @@ alwaysApply: true
 
 ## Repositories
 
-- **This workspace**: SPA console for the Reshapr control plane (`src/api/client.ts` = same endpoints as the CLI).
-- **Backend / CLI** (typical clone): `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr` — `control-plane/`, `cli/`.
+- **This workspace**: SPA console for the Reshapr control plane (`src/api/client.ts` = same REST paths as the [Reshapr](https://github.com/reshaprio/reshapr) CLI).
+- **Backend / CLI**: not in this repo. Clone [reshapr](https://github.com/reshaprio/reshapr) separately when you need Quarkus sources or the CLI — relevant paths there are `control-plane/` (API server) and `cli/` (TypeScript CLI). Treat paths in archived docs under `docs/` as examples, not as assumptions about the contributor’s disk layout.
 
 ## Read first
 
 1. `docs/CHAT_SESSION_SUMMARY.md` — history and decisions.
 2. `docs/plans/api_cli_et_ui_web.md` — archived API / UI plan.
 3. `docs/reshapr-WEB_UI.md` — auth architecture, CORS, MVP.
-4. `docs/reshapr-control-plane-CORS.md` — `application.properties` excerpt.
+4. `docs/reshapr-control-plane-CORS.md` — `application.properties` excerpt (reference only; live file lives in the reshapr repo).
 5. `docs/CURSOR_USER_RULES.md` — user / agent preferences (archive).
 6. `docs/ARCHITECTURE.md` — Vite env vars, Option B, session.
 
@@ -24,7 +24,7 @@ alwaysApply: true
 
 - On-prem auth: `POST /auth/login/reshapr` → token in `sessionStorage`; `Authorization: Bearer` on `/api/v1/*`.
 - SaaS: OAuth not implemented in the UI; message on the login screen.
-- CORS: `RESHAPR_HTTP_CORS_ORIGINS` on the Quarkus **control plane**; Vite origin often `http://localhost:5173`.
+- CORS: `RESHAPR_HTTP_CORS_ORIGINS` on the Quarkus **control plane**; Vite dev origin is often `http://localhost:5173`.
 - **Plans** and **secrets** updates: **PUT** (aligned with Quarkus + CLI), not PATCH.
 
 ## Language
