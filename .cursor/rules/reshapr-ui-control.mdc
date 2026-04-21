@@ -1,0 +1,32 @@
+---
+description: Contexte reshapr-ui-control — API CLI, CORS, auth, docs locales
+globs: "**/*"
+alwaysApply: true
+---
+
+# reshapr-ui-control — contexte agent
+
+## Dépôts
+
+- **Ce workspace** : SPA console pour le control-plane Reshapr (`src/api/client.ts` = mêmes endpoints que le CLI).
+- **Backend / CLI** (clone typique) : `/Users/tmathias/WORKSPACE/GOZEN/TOOLS/reshapr` — `control-plane/`, `cli/`.
+
+## Lire en priorité
+
+1. `docs/CHAT_SESSION_SUMMARY.md` — historique et décisions.
+2. `docs/plans/api_cli_et_ui_web.md` — plan API / UI archivé.
+3. `docs/reshapr-WEB_UI.md` — architecture auth, CORS, MVP.
+4. `docs/reshapr-control-plane-CORS.md` — extrait `application.properties`.
+5. `docs/CURSOR_USER_RULES.md` — préférences utilisateur / agent.
+6. `docs/ARCHITECTURE.md` — variables Vite, Option B, session.
+
+## Règles techniques rapides
+
+- Auth on-prem : `POST /auth/login/reshapr` → token en `sessionStorage` ; header `Authorization: Bearer` sur `/api/v1/*`.
+- SaaS : OAuth non implémenté dans l’UI ; message sur l’écran login.
+- CORS : variable d’environnement `RESHAPR_HTTP_CORS_ORIGINS` sur le **control-plane** Quarkus ; origine Vite souvent `http://localhost:5173`.
+- Mise à jour **plans** et **secrets** : **PUT** (aligné Quarkus + CLI), pas PATCH.
+
+## Langue
+
+- Réponses à l’utilisateur en **français** sauf demande contraire.
