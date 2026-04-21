@@ -36,3 +36,6 @@ npm run preview
 ```
 
 Static assets are in `dist/`.
+
+## Standalone node script
+Look at the [`./standalone-scripts/README.md`](./standalone-scripts/README.md) section to some standalone nodes scripts.
