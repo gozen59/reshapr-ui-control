@@ -208,6 +208,43 @@ table.data th {
   font-weight: 600;
 }
 
+/* kubectl-style service board */
+table.data.board {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+table.data.board th {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+table.data.board td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+table.data.board td.board-name {
+  white-space: normal;
+  max-width: min(28rem, 40vw);
+}
+table.data.board .board-actions {
+  width: 1%;
+  text-align: right;
+}
+table.data.board td.board-backend {
+  max-width: min(36rem, 48vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+table.data.board td.board-service {
+  max-width: min(22rem, 32vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .json-block {
   background: #0d1117;
   border: 1px solid var(--border);
