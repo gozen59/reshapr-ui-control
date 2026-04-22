@@ -101,7 +101,8 @@ export function apiClient() {
 
   return {
     base,
-    listServices: () => json<unknown[]>('/api/v1/services'),
+    listServices: () =>
+      json<unknown[]>('/api/v1/services?page=0&size=500'),
     listServicesPage: (page: number, size: number) =>
       json<unknown[]>(`/api/v1/services?page=${page}&size=${size}`),
     getService: (id: string) => json<unknown>(`/api/v1/services/${id}`),
