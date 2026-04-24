@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiError, apiClient } from '../api/client'
 
@@ -10,10 +9,95 @@ function asImportedService(v: unknown): { id: string; name: string } | null {
   return { id: o.id, name: o.name }
 }
 
+type Api = ReturnType<typeof apiClient>
+
+type ExposeOptions = {
+  backendEndpoint: string
+  gatewayGroupId: string
+  backendSecretId?: string
+  genApiKey: boolean
+}
+
+type ExposeResult = {
+  serviceId: string
+  serviceName: string
+  planId: string
+  expoId?: string
+  planApiKey?: string
+}
+
+/** Même enchaînement que `exposeService` dans la CLI `import` (configurationPlans + expositions). */
+async function createPlanAndExposition(
+  c: Api,
+  imported: unknown,
+  opts: ExposeOptions,
+): Promise<ExposeResult> {
+  const service = asImportedService(imported)
+  if (!service) {
+    throw new Error("Réponse d'import inattendue : id ou name du service absent.")
+  }
+
+  const planBody: Record<string, unknown> = {
+    name: `default-plan for ${service.name}`,
+    description: `Configuration plan for ${service.name} on ${opts.backendEndpoint}`,
+    serviceId: service.id,
+    backendEndpoint: opts.backendEndpoint,
+    backendSecretId: opts.backendSecretId,
+  }
+  if (opts.genApiKey) planBody.apiKey = 'generate-me'
+
+  const plan = (await c.createConfigurationPlan(planBody)) as { id: string; apiKey?: string }
+  const expo = (await c.createExposition({
+    configurationPlanId: plan.id,
+    gatewayGroupId: opts.gatewayGroupId,
+  })) as { id?: string }
+
+  return {
+    serviceId: service.id,
+    serviceName: service.name,
+    planId: plan.id,
+    expoId: expo.id,
+    planApiKey: plan.apiKey,
+  }
+}
+
+function CollapsibleTile({
+  title,
+  subtitle,
+  defaultOpen,
+  children,
+}: {
+  title: string
+  subtitle?: ReactNode
+  defaultOpen?: boolean
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLDetailsElement>(null)
+  useEffect(() => {
+    if (defaultOpen && ref.current) ref.current.open = true
+  }, [defaultOpen])
+
+  return (
+    <details ref={ref} className="tile">
+      <summary>
+        {title}
+        {subtitle ? <span className="tile-summary-sub muted">{subtitle}</span> : null}
+      </summary>
+      <div className="tile-body">{children}</div>
+    </details>
+  )
+}
+
+const DEFAULT_OPEN_METEO_URL =
+  'https://raw.githubusercontent.com/open-meteo/open-meteo/refs/heads/main/openapi.yml'
+const DEFAULT_OPEN_METEO_BACKEND = 'https://api.open-meteo.com'
+
 export function ArtifactsPage() {
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [importServiceApiKey, setImportServiceApiKey] = useState<string | null>(null)
+  /** Source de la spec : aligné sur <code>-f</code> vs <code>-u</code> de la CLI. */
+  const [importSource, setImportSource] = useState<'file' | 'url'>('file')
 
   const clearAlerts = () => {
     setErr(null)
@@ -21,19 +105,15 @@ export function ArtifactsPage() {
     setImportServiceApiKey(null)
   }
 
-  const onImportService = async (ev: FormEvent<HTMLFormElement>) => {
+  const onImportAndExpose = async (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault()
     const form = ev.currentTarget
     clearAlerts()
     const fd = new FormData(form)
-    const file = fd.get('serviceSpecFile') as File | null
-    if (!file?.size) {
-      setErr('Choisissez un fichier de spécification.')
-      return
-    }
+
     const backendEndpoint = String(fd.get('backendEndpoint') || '').trim()
     if (!backendEndpoint) {
-      setErr('URL du backend cible (backendEndpoint) requise.')
+      setErr('URL du backend cible (--backendEndpoint) requise.')
       return
     }
     const sn = String(fd.get('serviceNameIs') || '').trim()
@@ -52,33 +132,42 @@ export function ArtifactsPage() {
 
     try {
       const c = apiClient()
-      const imported = await c.importArtifactFile(file, extra)
-      const service = asImportedService(imported)
-      if (!service) {
-        setErr("Réponse d'import inattendue : id ou name du service absent.")
-        return
+      let imported: unknown
+
+      if (importSource === 'file') {
+        const file = fd.get('serviceSpecFile') as File | null
+        if (!file?.size) {
+          setErr('Choisissez un fichier de spécification (-f / --file).')
+          return
+        }
+        imported = await c.importArtifactFile(file, extra)
+      } else {
+        const url = String(fd.get('specUrl') || '').trim()
+        if (!url) {
+          setErr('URL de la spécification requise (-u / --url).')
+          return
+        }
+        const p = new URLSearchParams()
+        p.set('url', url)
+        p.set('mainArtifact', 'true')
+        const secret = String(fd.get('secretName') || '').trim()
+        if (secret) p.set('secretName', secret)
+        if (sn) p.set('serviceName', sn)
+        if (sv) p.set('serviceVersion', sv)
+        imported = await c.importArtifactUrl(p)
       }
 
-      const planBody: Record<string, unknown> = {
-        name: `default-plan for ${service.name}`,
-        description: `Configuration plan for ${service.name} on ${backendEndpoint}`,
-        serviceId: service.id,
+      const out = await createPlanAndExposition(c, imported, {
         backendEndpoint,
-        backendSecretId,
-      }
-      if (genKey) planBody.apiKey = 'generate-me'
-
-      const plan = (await c.createConfigurationPlan(planBody)) as { id: string; apiKey?: string }
-      if (plan.apiKey) setImportServiceApiKey(plan.apiKey)
-
-      const expo = (await c.createExposition({
-        configurationPlanId: plan.id,
         gatewayGroupId,
-      })) as { id?: string }
-
+        backendSecretId,
+        genApiKey: genKey,
+      })
+      if (out.planApiKey) setImportServiceApiKey(out.planApiKey)
+      const via = importSource === 'file' ? '-f' : '-u'
       setMsg(
-        `Import Service terminé — service « ${service.name} » (${service.id}), plan ${plan.id}` +
-          (expo.id ? `, exposition ${expo.id}.` : '.'),
+        `Import + exposition OK (${via}, --backendEndpoint) — service « ${out.serviceName} » (${out.serviceId}), plan ${out.planId}` +
+          (out.expoId ? `, exposition ${out.expoId}.` : '.'),
       )
       form.reset()
     } catch (e) {
@@ -188,7 +277,9 @@ export function ArtifactsPage() {
   return (
     <div className="page">
       <h1>Artifacts</h1>
-      <p className="muted">Import et attachement — mêmes contrats que le CLI.</p>
+      <p className="muted">
+        Import et attachement — mêmes contrats que le CLI. Chaque bloc est repliable (clique sur le titre).
+      </p>
       {err && <p className="error">{err}</p>}
       {msg && <p className="success">{msg}</p>}
       {importServiceApiKey && (
@@ -200,28 +291,91 @@ export function ArtifactsPage() {
         </div>
       )}
 
-      <section className="card">
-        <h2>Import Service</h2>
-        <p className="muted small" style={{ marginTop: 0 }}>
-          Même enchaînement que <code>reshapr import -f … --backendEndpoint …</code> :{' '}
-          <code>POST /api/v1/artifacts</code> puis création d’un plan et d’une exposition. Le groupe de
-          passerelles par défaut côté CLI est <code>1</code> (modifiable ci-dessous). Voir aussi{' '}
-          <Link to="/gateway-groups">Gateway groups</Link>.
-        </p>
-        <form onSubmit={onImportService} className="stack" style={{ marginTop: '0.75rem' }}>
-          <label className="field">
-            <span>Fichier de spécification</span>
-            <input type="file" name="serviceSpecFile" required />
-          </label>
+      <CollapsibleTile
+        title="Import + exposition (--backendEndpoint)"
+        defaultOpen
+        subtitle={
+          <>
+            Comme <code>reshapr import -f|-u … --backendEndpoint …</code> (
+            <a
+              href="https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/import.ts"
+              target="_blank"
+              rel="noreferrer"
+            >
+              import.ts
+            </a>
+            ) : <code>POST /api/v1/artifacts</code> puis plan + exposition —{' '}
+            <Link to="/gateway-groups">Gateway groups</Link>.
+          </>
+        }
+      >
+        <form onSubmit={onImportAndExpose} className="stack" style={{ marginTop: '0.75rem' }}>
+          <div className="field">
+            <span>Source de la spécification</span>
+            <div className="row wrap">
+              <label className="row">
+                <input
+                  type="radio"
+                  name="importSourceUi"
+                  checked={importSource === 'file'}
+                  onChange={() => setImportSource('file')}
+                />
+                Fichier (<code>-f</code> / <code>--file</code>)
+              </label>
+              <label className="row">
+                <input
+                  type="radio"
+                  name="importSourceUi"
+                  checked={importSource === 'url'}
+                  onChange={() => setImportSource('url')}
+                />
+                URL (<code>-u</code> / <code>--url</code>)
+              </label>
+            </div>
+          </div>
+
+          {importSource === 'file' ? (
+            <label className="field">
+              <span>Fichier de spécification</span>
+              <input type="file" name="serviceSpecFile" />
+            </label>
+          ) : (
+            <>
+              <label className="field">
+                <span>URL de la spécification (-u / --url)</span>
+                <input
+                  key="spec-url-field"
+                  name="specUrl"
+                  className="wide"
+                  defaultValue={DEFAULT_OPEN_METEO_URL}
+                  placeholder="https://…"
+                  autoComplete="off"
+                />
+              </label>
+              <label className="field">
+                <span>Secret pour télécharger la spec (-s / secretName, optionnel)</span>
+                <input name="secretName" autoComplete="off" />
+              </label>
+            </>
+          )}
+
           <label className="field">
             <span>
               Backend endpoint (<code>--backendEndpoint</code>)
             </span>
-            <input name="backendEndpoint" className="wide" placeholder="https://…" required />
+            <input
+              key={`be-${importSource}`}
+              name="backendEndpoint"
+              className="wide"
+              placeholder="https://…"
+              required
+              defaultValue={importSource === 'url' ? DEFAULT_OPEN_METEO_BACKEND : ''}
+              autoComplete="off"
+            />
           </label>
           <label className="field">
             <span>
-              Gateway group ID (<code>gatewayGroupId</code>)
+              Gateway group ID (<code>gatewayGroupId</code>, défaut CLI : 1)
             </span>
             <input name="gatewayGroupId" placeholder="1" defaultValue="1" autoComplete="off" />
           </label>
@@ -245,11 +399,10 @@ export function ArtifactsPage() {
             Importer et exposer
           </button>
         </form>
-      </section>
+      </CollapsibleTile>
 
-      <section className="card">
-        <h2>Importer un fichier</h2>
-        <form onSubmit={onImportFile} className="grid-form">
+      <CollapsibleTile title="Importer un fichier" subtitle="POST /api/v1/artifacts (multipart), sans plan ni exposition.">
+        <form onSubmit={onImportFile} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input type="file" name="file" required />
           <input name="serviceName" placeholder="serviceName (GraphQL)" />
           <input name="serviceVersion" placeholder="serviceVersion" />
@@ -257,11 +410,10 @@ export function ArtifactsPage() {
             Importer
           </button>
         </form>
-      </section>
+      </CollapsibleTile>
 
-      <section className="card">
-        <h2>Importer depuis URL</h2>
-        <form onSubmit={onImportUrl} className="grid-form">
+      <CollapsibleTile title="Importer depuis URL" subtitle="POST /api/v1/artifacts (application/x-www-form-urlencoded).">
+        <form onSubmit={onImportUrl} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input name="url" placeholder="https://…" className="wide" required />
           <input name="secretName" placeholder="secretName (optionnel)" />
           <input name="serviceName" placeholder="serviceName" />
@@ -270,28 +422,26 @@ export function ArtifactsPage() {
             Importer URL
           </button>
         </form>
-      </section>
+      </CollapsibleTile>
 
-      <section className="card">
-        <h2>Attacher un fichier</h2>
-        <form onSubmit={onAttachFile} className="grid-form">
+      <CollapsibleTile title="Attacher un fichier" subtitle="POST /api/v1/artifacts/attach">
+        <form onSubmit={onAttachFile} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input type="file" name="afile" required />
           <button type="submit" className="btn secondary">
             Attacher
           </button>
         </form>
-      </section>
+      </CollapsibleTile>
 
-      <section className="card">
-        <h2>Attacher depuis URL</h2>
-        <form onSubmit={onAttachUrl} className="grid-form">
+      <CollapsibleTile title="Attacher depuis URL" subtitle="POST /api/v1/artifacts/attach (url + secret optionnel).">
+        <form onSubmit={onAttachUrl} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input name="aurl" placeholder="https://…" className="wide" required />
           <input name="asecret" placeholder="secretName (optionnel)" />
           <button type="submit" className="btn secondary">
             Attacher URL
           </button>
         </form>
-      </section>
+      </CollapsibleTile>
     </div>
   )
 }
