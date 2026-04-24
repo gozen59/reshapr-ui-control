@@ -27,7 +27,7 @@ export function LoginPage() {
         await refreshBootstrap()
       } catch (e) {
         if (!cancelled)
-          setError(e instanceof ApiError ? e.message : 'Impossible de joindre le serveur')
+          setError(e instanceof ApiError ? e.message : 'Unable to reach the server')
       }
     })()
     return () => {
@@ -55,21 +55,20 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="card login-card">
-        <h1>Connexion Reshapr</h1>
+        <h1>Reshapr sign-in</h1>
         <p className="muted">
-          Console web (Option B). En dev, laissez l’URL vide pour passer par le proxy Vite (évite
-          CORS). Sinon, le control-plane doit exposer{' '}
-          <code>RESHAPR_HTTP_CORS_ORIGINS</code> avec l’origine de cette app.
+          Web console. In development, leave the URL empty to use the Vite proxy (avoids CORS). Otherwise the
+          control plane must allow this app’s origin in <code>RESHAPR_HTTP_CORS_ORIGINS</code>.
         </p>
 
         <label className="field">
-          <span>URL du control-plane</span>
+          <span>Control plane URL</span>
           <input
             value={serverUrl}
             onChange={(e) => setServerUrl(e.target.value)}
             placeholder={
               import.meta.env.DEV
-                ? 'Vide = proxy localhost:5555, ou http://localhost:5555'
+                ? 'Empty = proxy to localhost:5555, or http://localhost:5555'
                 : 'http://localhost:5555'
             }
             autoComplete="url"
@@ -84,14 +83,14 @@ export function LoginPage() {
 
         {saas && (
           <div className="banner warn">
-            Mode SaaS : la connexion OAuth navigateur n’est pas implémentée ici. Utilisez le CLI{' '}
-            <code>reshapr login</code> ou étendez ce dépôt pour le flux OAuth.
+            SaaS mode: browser OAuth sign-in is not implemented here. Use the <code>reshapr login</code> CLI or extend
+            this app for the OAuth flow.
           </div>
         )}
 
         <form onSubmit={onSubmit} className="login-form">
           <label className="field">
-            <span>Utilisateur</span>
+            <span>Username</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -100,7 +99,7 @@ export function LoginPage() {
             />
           </label>
           <label className="field">
-            <span>Mot de passe</span>
+            <span>Password</span>
             <input
               type="password"
               value={password}
@@ -111,12 +110,12 @@ export function LoginPage() {
           </label>
           {error && <p className="error">{error}</p>}
           <button type="submit" className="btn primary" disabled={loading || saas}>
-            {loading ? 'Connexion…' : 'Se connecter'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 
         <p className="muted small">
-          Voir <code>PLAN.md</code> et <code>docs/ARCHITECTURE.md</code>.
+          See <code>PLAN.md</code> and <code>docs/ARCHITECTURE.md</code>.
         </p>
       </div>
     </div>

@@ -20,7 +20,7 @@ export function QuotasPage() {
     <div className="page">
       <h1>Quotas</h1>
       {error && <p className="error">{error}</p>}
-      <pre className="json-block">{data ? JSON.stringify(data, null, 2) : '…'}</pre>
+      <pre className="json-block">{data ? JSON.stringify(data, null, 2) : 'Loading…'}</pre>
     </div>
   )
 }

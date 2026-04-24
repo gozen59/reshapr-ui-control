@@ -43,7 +43,7 @@ export function PlanDetailPage() {
     setError(null)
     try {
       const out = (await apiClient().renewApiKey(id)) as { apiKey?: string }
-      setApiKeyShown(out.apiKey ?? '(voir réponse serveur)')
+      setApiKeyShown(out.apiKey ?? '(see server response)')
       await load()
     } catch (e) {
       setError(e instanceof ApiError ? e.message : String(e))
@@ -51,7 +51,7 @@ export function PlanDetailPage() {
   }
 
   const onDelete = async () => {
-    if (!id || !confirm('Supprimer ce plan ?')) return
+    if (!id || !confirm('Delete this plan?')) return
     try {
       await apiClient().deleteConfigurationPlan(id)
       nav('/plans')
@@ -69,27 +69,27 @@ export function PlanDetailPage() {
         <h1>Plan {id}</h1>
         <div className="row">
           <button type="button" className="btn secondary" onClick={() => void onRenew()}>
-            Renouveler clé API
+            Renew API key
           </button>
           <button type="button" className="btn danger" onClick={() => void onDelete()}>
-            Supprimer
+            Delete
           </button>
         </div>
       </header>
       {apiKeyShown && (
         <div className="banner warn">
-          Nouvelle clé API : <code>{apiKeyShown}</code>
+          New API key: <code>{apiKeyShown}</code>
         </div>
       )}
       {error && <p className="error">{error}</p>}
       <form onSubmit={onSave} className="stack">
         <p className="muted small">
-          Édition JSON complète (PUT). Conservez <code>id</code> et <code>organizationId</code> du
-          document chargé.
+          Full JSON edit (PUT). Keep <code>id</code> and <code>organizationId</code> from the loaded
+          document.
         </p>
         <textarea className="code" rows={22} value={raw} onChange={(e) => setRaw(e.target.value)} />
         <button type="submit" className="btn primary">
-          Enregistrer
+          Save
         </button>
       </form>
     </div>

@@ -60,7 +60,7 @@ export function ServicesPage() {
       <header className="page-header">
         <h1>Services</h1>
         <button type="button" className="btn secondary" onClick={() => void load()}>
-          Actualiser
+          Refresh
         </button>
       </header>
       {error && <p className="error">{error}</p>}
@@ -88,14 +88,14 @@ export function ServicesPage() {
                 <td>{s.age}</td>
                 <td className="board-actions">
                   <Link to={`/services/${s.id}`} className="btn secondary small">
-                    Détail
+                    Details
                   </Link>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && !error && <p className="muted">Aucun service.</p>}
+        {rows.length === 0 && !error && <p className="muted">No services.</p>}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 /**
- * Résolution des custom tools MCP à partir d’une URL d’endpoint et des API control-plane
- * (équivalent métier à la logique PostgreSQL des scripts standalone, sans les toucher).
+ * Resolves MCP custom tools from an endpoint URL and control-plane APIs
+ * (business equivalent to standalone PostgreSQL logic, without modifying those scripts).
  */
 
 export type McpCustomToolsClient = {
@@ -35,11 +35,11 @@ export function parseMcpUrl(mcpUrl: string): {
   try {
     u = new URL(mcpUrl)
   } catch {
-    throw new Error('URL MCP invalide')
+    throw new Error('Invalid MCP URL')
   }
   const parts = u.pathname.split('/').filter(Boolean)
   if (parts.length < 4 || String(parts[0]).toLowerCase() !== 'mcp') {
-    throw new Error('Chemin MCP attendu: /mcp/{organization}/{service}/{version}')
+    throw new Error('Expected MCP path: /mcp/{organization}/{service}/{version}')
   }
   const orgId = decodeURIComponent(parts[1].replace(/\+/g, '%20'))
   const serviceName = decodeURIComponent(parts[2].replace(/\+/g, '%20'))
@@ -252,13 +252,13 @@ export async function resolveMcpCustomToolsFromUrl(
       s.version === version,
   )
   if (!service?.id) {
-    throw new Error(`Service introuvable pour ${orgId} / ${serviceName} / ${version}`)
+    throw new Error(`Service not found for ${orgId} / ${serviceName} / ${version}`)
   }
   const expoRaw = await resolveExpositionForMcp(client, service.id, host)
   const expo = expoRaw as ExpoDetail | null
   if (!expo?.id) {
     throw new Error(
-      'Aucune exposition (active ou totale) dont les FQDN correspondent à l’hôte de l’URL MCP pour ce service',
+      'No exposition (active or full list) has FQDNs matching the MCP URL host for this service',
     )
   }
   const included = includedOperationsList(expo.configurationPlan?.includedOperations)

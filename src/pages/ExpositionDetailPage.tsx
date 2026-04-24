@@ -35,7 +35,7 @@ export function ExpositionDetailPage() {
   }, [id])
 
   const onDelete = async () => {
-    if (!id || !confirm('Supprimer cette exposition ?')) return
+    if (!id || !confirm('Delete this exposition?')) return
     try {
       await apiClient().deleteExposition(id)
       nav('/expositions')
@@ -52,17 +52,17 @@ export function ExpositionDetailPage() {
       <header className="page-header">
         <h1>Exposition {id}</h1>
         <button type="button" className="btn danger" onClick={() => void onDelete()}>
-          Supprimer
+          Delete
         </button>
       </header>
       {error && <p className="error">{error}</p>}
-      <h2>Détail</h2>
+      <h2>Details</h2>
       <pre className="json-block">{detail ? JSON.stringify(detail, null, 2) : '…'}</pre>
       <h2>Active (endpoints)</h2>
       {active ? (
         <pre className="json-block">{JSON.stringify(active, null, 2)}</pre>
       ) : (
-        <p className="muted">Pas d’exposition active (404) ou pas encore prête.</p>
+        <p className="muted">No active exposition (404) or not ready yet.</p>
       )}
     </div>
   )

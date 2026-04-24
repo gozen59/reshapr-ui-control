@@ -22,7 +22,7 @@ export function PlanNewPage() {
     const backendSecretId = String(fd.get('backendSecretId') || '') || undefined
     const genKey = fd.get('apiKey') === 'on'
     if (!name || !serviceId || !backendEndpoint) {
-      setError('Nom, serviceId et backendEndpoint sont requis.')
+      setError('name, serviceId, and backendEndpoint are required.')
       return
     }
     try {
@@ -45,19 +45,19 @@ export function PlanNewPage() {
 
   return (
     <div className="page">
-      <h1>Nouveau plan</h1>
+      <h1>New plan</h1>
       {apiKeyShown && (
         <div className="banner warn">
-          Clé API (à copier tout de suite) : <code>{apiKeyShown}</code>
+          API key (copy now): <code>{apiKeyShown}</code>
           <p>
-            <Link to={createdId ? `/plans/${createdId}` : '/plans'}>Ouvrir le plan créé</Link>
+            <Link to={createdId ? `/plans/${createdId}` : '/plans'}>Open created plan</Link>
           </p>
         </div>
       )}
       {error && <p className="error">{error}</p>}
       <form onSubmit={onSubmit} className="card stack">
         <label className="field">
-          <span>Nom</span>
+          <span>Name</span>
           <input name="name" required />
         </label>
         <label className="field">
@@ -78,10 +78,10 @@ export function PlanNewPage() {
         </label>
         <label className="field row">
           <input type="checkbox" name="apiKey" />
-          <span>Générer une clé API</span>
+          <span>Generate an API key</span>
         </label>
         <button type="submit" className="btn primary">
-          Créer
+          Create
         </button>
       </form>
     </div>

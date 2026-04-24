@@ -26,7 +26,7 @@ export function ServiceDetailPage() {
   }, [id])
 
   const onDelete = async () => {
-    if (!id || !confirm('Supprimer ce service ?')) return
+    if (!id || !confirm('Delete this service?')) return
     try {
       await apiClient().deleteService(id)
       nav('/services')
@@ -43,11 +43,11 @@ export function ServiceDetailPage() {
       <header className="page-header">
         <h1>Service {id}</h1>
         <button type="button" className="btn danger" onClick={() => void onDelete()}>
-          Supprimer
+          Delete
         </button>
       </header>
       {error && <p className="error">{error}</p>}
-      <pre className="json-block">{data ? JSON.stringify(data, null, 2) : 'Chargement…'}</pre>
+      <pre className="json-block">{data ? JSON.stringify(data, null, 2) : 'Loading…'}</pre>
     </div>
   )
 }
