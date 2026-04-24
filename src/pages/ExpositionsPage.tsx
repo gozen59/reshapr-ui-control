@@ -120,7 +120,7 @@ export function ExpositionsPage() {
               checked={mode === 'active'}
               onChange={() => setMode('active')}
             />
-            Actives
+            Active
           </label>
           <label className="row">
             <input
@@ -129,38 +129,33 @@ export function ExpositionsPage() {
               checked={mode === 'all'}
               onChange={() => setMode('all')}
             />
-            Toutes
+            All
           </label>
           <button type="button" className="btn secondary" onClick={() => void load()}>
-            Actualiser
+            Refresh
           </button>
         </div>
       </header>
 
       <section className="card">
-        <h2>Créer une exposition</h2>
+        <h2>Create exposition</h2>
         <p className="muted small">
-          Le client envoie <code>POST /api/v1/expositions</code> avec un corps{' '}
-          <strong>JSON</strong> qui ne contient que <strong>deux propriétés obligatoires</strong>{' '}
-          (noms exacts, sensibles à la casse) :
+          The client sends <code>POST /api/v1/expositions</code> with a <strong>JSON</strong> body that only includes{' '}
+          <strong>two required properties</strong> (exact names, case-sensitive):
         </p>
         <ul className="muted small">
           <li>
-            <code>configurationPlanId</code> (string) — identifiant du plan de configuration à
-            exposer (valeur <code>id</code> d’un plan existant, voir la page{' '}
-            <Link to="/plans">Plans</Link>).
+            <code>configurationPlanId</code> (string) — id of the configuration plan to expose (an existing plan’s{' '}
+            <code>id</code>; see <Link to="/plans">Plans</Link>).
           </li>
           <li>
-            <code>gatewayGroupId</code> (string) — identifiant du groupe de passerelles sur lequel
-            l’exposition est publiée (valeur <code>id</code> d’un groupe existant, voir{' '}
-            <Link to="/gateway-groups">Gateway groups</Link>
-            ).
+            <code>gatewayGroupId</code> (string) — id of the gateway group where the exposition is published (an
+            existing group’s <code>id</code>; see <Link to="/gateway-groups">Gateway groups</Link>).
           </li>
         </ul>
         <p className="muted small">
-          Les autres champs éventuels du DTO côté serveur (<code>id</code>,{' '}
-          <code>organizationId</code>, <code>createdOn</code>, …) ne sont <strong>pas</strong> saisis
-          ici : ils sont fixés par le control plane à la création.
+          Other server-side DTO fields (<code>id</code>, <code>organizationId</code>, <code>createdOn</code>, …) are{' '}
+          <strong>not</strong> entered here: the control plane sets them on create.
         </p>
         <form onSubmit={onCreate} className="stack" style={{ marginTop: '0.75rem' }}>
           <div className="field">
@@ -172,7 +167,7 @@ export function ExpositionsPage() {
               className="wide"
               value={planId}
               onChange={(e) => setPlanId(e.target.value)}
-              placeholder="UUID ou id du plan"
+              placeholder="Plan UUID or id"
               autoComplete="off"
               spellCheck={false}
             />
@@ -186,14 +181,14 @@ export function ExpositionsPage() {
               className="wide"
               value={ggId}
               onChange={(e) => setGgId(e.target.value)}
-              placeholder="UUID ou id du groupe de passerelles"
+              placeholder="Gateway group UUID or id"
               autoComplete="off"
               spellCheck={false}
             />
           </div>
           <div className="row">
             <button type="submit" className="btn primary">
-              Créer
+              Create
             </button>
           </div>
         </form>
@@ -228,14 +223,14 @@ export function ExpositionsPage() {
                 <td>{x.age}</td>
                 <td className="board-actions">
                   <Link to={`/expositions/${x.id}`} className="btn secondary small">
-                    Détail
+                    Details
                   </Link>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && !error && <p className="muted">Aucune exposition.</p>}
+        {rows.length === 0 && !error && <p className="muted">No expositions.</p>}
       </div>
     </div>
   )

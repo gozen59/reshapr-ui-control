@@ -40,7 +40,7 @@ export function Layout() {
             Quotas
           </NavLink>
           <NavLink to="/api-tokens" className={navClass}>
-            Jetons API
+            API tokens
           </NavLink>
         </nav>
         <div className="sidebar-footer">
@@ -48,7 +48,7 @@ export function Layout() {
             {serverUrl}
           </div>
           <button type="button" className="btn secondary" onClick={() => logout()}>
-            Déconnexion
+            Sign out
           </button>
         </div>
       </aside>

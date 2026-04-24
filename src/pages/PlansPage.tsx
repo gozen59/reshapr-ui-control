@@ -30,13 +30,13 @@ export function PlansPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Plans de configuration</h1>
+        <h1>Configuration plans</h1>
         <div className="row">
           <button type="button" className="btn secondary" onClick={() => void load()}>
-            Actualiser
+            Refresh
           </button>
           <Link to="/plans/new" className="btn primary">
-            Nouveau plan
+            New plan
           </Link>
         </div>
       </header>
@@ -45,7 +45,7 @@ export function PlansPage() {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nom</th>
+            <th>Name</th>
             <th>Service</th>
             <th>Backend</th>
           </tr>
@@ -65,7 +65,7 @@ export function PlansPage() {
           ))}
         </tbody>
       </table>
-      {rows.length === 0 && !error && <p className="muted">Aucun plan.</p>}
+      {rows.length === 0 && !error && <p className="muted">No plans.</p>}
     </div>
   )
 }

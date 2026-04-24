@@ -32,7 +32,7 @@ export function GatewayGroupsPage() {
       try {
         labels = JSON.parse(lj) as Record<string, string>
       } catch {
-        setError('Labels : JSON invalide')
+        setError('Labels: invalid JSON')
         return
       }
     }
@@ -47,7 +47,7 @@ export function GatewayGroupsPage() {
   }
 
   const onDelete = async (id: string) => {
-    if (!confirm(`Supprimer le groupe ${id} ?`)) return
+    if (!confirm(`Delete group ${id}?`)) return
     setError(null)
     try {
       await apiClient().deleteGatewayGroup(id)
@@ -62,18 +62,18 @@ export function GatewayGroupsPage() {
       <header className="page-header">
         <h1>Gateway groups</h1>
         <button type="button" className="btn secondary" onClick={() => void load()}>
-          Actualiser
+          Refresh
         </button>
       </header>
       {error && <p className="error">{error}</p>}
 
       <section className="card">
-        <h2>Nouveau groupe</h2>
+        <h2>New group</h2>
         <form onSubmit={onCreate} className="stack">
-          <input name="name" placeholder="Nom" required />
-          <textarea name="labels" rows={3} placeholder='Labels JSON ex. {"env":"dev"}' />
+          <input name="name" placeholder="Name" required />
+          <textarea name="labels" rows={3} placeholder='Labels JSON e.g. {"env":"dev"}' />
           <button type="submit" className="btn primary">
-            Créer
+            Create
           </button>
         </form>
       </section>
@@ -83,7 +83,7 @@ export function GatewayGroupsPage() {
           <tr>
             <th>ID</th>
             <th>Org</th>
-            <th>Nom</th>
+            <th>Name</th>
             <th>Labels</th>
             <th />
           </tr>
@@ -99,7 +99,7 @@ export function GatewayGroupsPage() {
               </td>
               <td>
                 <button type="button" className="btn danger small" onClick={() => void onDelete(g.id)}>
-                  Supprimer
+                  Delete
                 </button>
               </td>
             </tr>

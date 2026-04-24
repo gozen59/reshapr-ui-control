@@ -46,7 +46,7 @@ export function ApiTokensPage() {
   }
 
   const onDelete = async (tokenId: string) => {
-    if (!confirm('Révoquer ce jeton ?')) return
+    if (!confirm('Revoke this token?')) return
     setError(null)
     try {
       await apiClient().deleteApiToken(tokenId)
@@ -59,31 +59,31 @@ export function ApiTokensPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Jetons API</h1>
+        <h1>API tokens</h1>
         <button type="button" className="btn secondary" onClick={() => void load()}>
-          Actualiser
+          Refresh
         </button>
       </header>
       {createdToken && (
         <div className="banner warn">
-          Jeton (copie unique) : <code>{createdToken}</code>
+          Token (copy once): <code>{createdToken}</code>
         </div>
       )}
       {error && <p className="error">{error}</p>}
 
       <section className="card">
-        <h2>Créer</h2>
+        <h2>Create</h2>
         <form onSubmit={onCreate} className="row wrap">
-          <input name="name" placeholder="Nom" required />
+          <input name="name" placeholder="Name" required />
           <select name="validityDays" defaultValue={30}>
             {VALIDITY.map((d) => (
               <option key={d} value={d}>
-                {d} jour{d > 1 ? 's' : ''}
+                {d} day{d > 1 ? 's' : ''}
               </option>
             ))}
           </select>
           <button type="submit" className="btn primary">
-            Créer
+            Create
           </button>
         </form>
       </section>
@@ -92,8 +92,8 @@ export function ApiTokensPage() {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nom</th>
-            <th>Valide jusqu’au</th>
+            <th>Name</th>
+            <th>Valid until</th>
             <th />
           </tr>
         </thead>
@@ -105,7 +105,7 @@ export function ApiTokensPage() {
               <td>{t.validUntil ? new Date(t.validUntil).toLocaleString() : '—'}</td>
               <td>
                 <button type="button" className="btn danger small" onClick={() => void onDelete(t.id)}>
-                  Révoquer
+                  Revoke
                 </button>
               </td>
             </tr>

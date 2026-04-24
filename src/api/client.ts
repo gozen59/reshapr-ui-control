@@ -67,7 +67,7 @@ export async function loginReshapr(serverUrl: string, username: string, password
 export function apiClient() {
   const base = getStoredServerUrl().replace(/\/$/, '')
   const token = getStoredToken()
-  if (!token) throw new ApiError('Non authentifié', 401)
+  if (!token) throw new ApiError('Not authenticated', 401)
 
   const authHeaders = (): HeadersInit => ({
     Authorization: `Bearer ${token}`,
@@ -193,7 +193,7 @@ export function apiClient() {
     listExpositionsActive: () => json<unknown[]>('/api/v1/expositions/active'),
     getExposition: (id: string) => json<unknown>(`/api/v1/expositions/${id}`),
     getActiveExposition: (id: string) => json<unknown>(`/api/v1/expositions/active/${id}`),
-    /** 404 → null (exposition sans gateway actif), aligné sur le comportement `expo get` côté CLI. */
+    /** 404 → null (no active gateway); same idea as `expo get` in the CLI. */
     getActiveExpositionOrNull: async (id: string): Promise<unknown | null> => {
       const res = await fetch(`${base}/api/v1/expositions/active/${id}`, {
         headers: authHeaders(),
@@ -210,10 +210,10 @@ export function apiClient() {
       }),
     deleteExposition: (id: string) => empty(`/api/v1/expositions/${id}`, { method: 'DELETE' }),
 
-    /** Même appel que `reshapr secret list` : {@link https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/secret.ts secret.ts} — pagination large pour l’UI. */
+    /** Same as `reshapr secret list` ({@link https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/secret.ts secret.ts}); large page size for this UI. */
     listSecretRefs: () =>
       json<unknown[]>('/api/v1/secrets/refs?page=0&size=500'),
-    /** Liste paginée complète (SecretDTO) — distincte de la CLI ; peut échouer selon la version / données du control-plane. */
+    /** Full paged list (SecretDTO); not what the CLI uses for `secret list`; may fail depending on control-plane/data. */
     listSecrets: (page = 0, size = 500) =>
       json<unknown[]>(`/api/v1/secrets?page=${page}&size=${size}`),
     getSecret: (id: string) => json<unknown>(`/api/v1/secrets/${id}`),

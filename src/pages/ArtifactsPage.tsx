@@ -26,7 +26,7 @@ type ExposeResult = {
   planApiKey?: string
 }
 
-/** Même enchaînement que `exposeService` dans la CLI `import` (configurationPlans + expositions). */
+/** Same sequence as `exposeService` in the CLI `import` (configurationPlans + expositions). */
 async function createPlanAndExposition(
   c: Api,
   imported: unknown,
@@ -34,7 +34,7 @@ async function createPlanAndExposition(
 ): Promise<ExposeResult> {
   const service = asImportedService(imported)
   if (!service) {
-    throw new Error("Réponse d'import inattendue : id ou name du service absent.")
+    throw new Error('Unexpected import response: service id or name is missing.')
   }
 
   const planBody: Record<string, unknown> = {
@@ -96,7 +96,7 @@ export function ArtifactsPage() {
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [importServiceApiKey, setImportServiceApiKey] = useState<string | null>(null)
-  /** Source de la spec : aligné sur <code>-f</code> vs <code>-u</code> de la CLI. */
+  /** Spec source: aligned with CLI <code>-f</code> vs <code>-u</code>. */
   const [importSource, setImportSource] = useState<'file' | 'url'>('file')
 
   const clearAlerts = () => {
@@ -113,13 +113,13 @@ export function ArtifactsPage() {
 
     const backendEndpoint = String(fd.get('backendEndpoint') || '').trim()
     if (!backendEndpoint) {
-      setErr('URL du backend cible (--backendEndpoint) requise.')
+      setErr('Target backend URL (--backendEndpoint) is required.')
       return
     }
     const sn = String(fd.get('serviceNameIs') || '').trim()
     const sv = String(fd.get('serviceVersionIs') || '').trim()
     if ((sn && !sv) || (!sn && sv)) {
-      setErr('Pour GraphQL : renseignez serviceName et serviceVersion ensemble, ou laissez les deux vides.')
+      setErr('For GraphQL: set both serviceName and serviceVersion, or leave both empty.')
       return
     }
     const gatewayGroupId = String(fd.get('gatewayGroupId') || '').trim() || '1'
@@ -137,14 +137,14 @@ export function ArtifactsPage() {
       if (importSource === 'file') {
         const file = fd.get('serviceSpecFile') as File | null
         if (!file?.size) {
-          setErr('Choisissez un fichier de spécification (-f / --file).')
+          setErr('Choose a specification file (-f / --file).')
           return
         }
         imported = await c.importArtifactFile(file, extra)
       } else {
         const url = String(fd.get('specUrl') || '').trim()
         if (!url) {
-          setErr('URL de la spécification requise (-u / --url).')
+          setErr('Specification URL is required (-u / --url).')
           return
         }
         const p = new URLSearchParams()
@@ -166,7 +166,7 @@ export function ArtifactsPage() {
       if (out.planApiKey) setImportServiceApiKey(out.planApiKey)
       const via = importSource === 'file' ? '-f' : '-u'
       setMsg(
-        `Import + exposition OK (${via}, --backendEndpoint) — service « ${out.serviceName} » (${out.serviceId}), plan ${out.planId}` +
+        `Import + exposition OK (${via}, --backendEndpoint) — service "${out.serviceName}" (${out.serviceId}), plan ${out.planId}` +
           (out.expoId ? `, exposition ${out.expoId}.` : '.'),
       )
       form.reset()
@@ -184,7 +184,7 @@ export function ArtifactsPage() {
     const fd = new FormData(form)
     const file = fd.get('file') as File | null
     if (!file?.size) {
-      setErr('Choisissez un fichier.')
+      setErr('Choose a file.')
       return
     }
     const sn = String(fd.get('serviceName') || '').trim()
@@ -210,7 +210,7 @@ export function ArtifactsPage() {
     const fd = new FormData(form)
     const url = String(fd.get('url') || '')
     if (!url) {
-      setErr('URL requise.')
+      setErr('URL is required.')
       return
     }
     const p = new URLSearchParams()
@@ -240,7 +240,7 @@ export function ArtifactsPage() {
     const fd = new FormData(form)
     const file = fd.get('afile') as File | null
     if (!file?.size) {
-      setErr('Choisissez un fichier.')
+      setErr('Choose a file.')
       return
     }
     try {
@@ -262,7 +262,7 @@ export function ArtifactsPage() {
     const url = String(fd.get('aurl') || '')
     const secret = String(fd.get('asecret') || '')
     if (!url) {
-      setErr('URL requise.')
+      setErr('URL is required.')
       return
     }
     try {
@@ -278,15 +278,15 @@ export function ArtifactsPage() {
     <div className="page">
       <h1>Artifacts</h1>
       <p className="muted">
-        Import et attachement — mêmes contrats que le CLI. Chaque bloc est repliable (clique sur le titre).
+        Import and attach — same contracts as the CLI. Each section is collapsible (click the title).
       </p>
       {err && <p className="error">{err}</p>}
       {msg && <p className="success">{msg}</p>}
       {importServiceApiKey && (
         <div className="banner warn">
-          Clé API du plan (copie unique) : <code>{importServiceApiKey}</code>
+          Plan API key (copy once): <code>{importServiceApiKey}</code>
           <p className="small muted" style={{ marginBottom: 0 }}>
-            Conservez-la tout de suite ; elle ne sera plus affichée ensuite.
+            Save it now; it will not be shown again.
           </p>
         </div>
       )}
@@ -296,7 +296,7 @@ export function ArtifactsPage() {
         defaultOpen
         subtitle={
           <>
-            Comme <code>reshapr import -f|-u … --backendEndpoint …</code> (
+            Like <code>reshapr import -f|-u … --backendEndpoint …</code> (
             <a
               href="https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/import.ts"
               target="_blank"
@@ -304,14 +304,14 @@ export function ArtifactsPage() {
             >
               import.ts
             </a>
-            ) : <code>POST /api/v1/artifacts</code> puis plan + exposition —{' '}
+            ) : <code>POST /api/v1/artifacts</code> then plan + exposition —{' '}
             <Link to="/gateway-groups">Gateway groups</Link>.
           </>
         }
       >
         <form onSubmit={onImportAndExpose} className="stack" style={{ marginTop: '0.75rem' }}>
           <div className="field">
-            <span>Source de la spécification</span>
+            <span>Specification source</span>
             <div className="row wrap">
               <label className="row">
                 <input
@@ -320,7 +320,7 @@ export function ArtifactsPage() {
                   checked={importSource === 'file'}
                   onChange={() => setImportSource('file')}
                 />
-                Fichier (<code>-f</code> / <code>--file</code>)
+                File (<code>-f</code> / <code>--file</code>)
               </label>
               <label className="row">
                 <input
@@ -336,13 +336,13 @@ export function ArtifactsPage() {
 
           {importSource === 'file' ? (
             <label className="field">
-              <span>Fichier de spécification</span>
+              <span>Specification file</span>
               <input type="file" name="serviceSpecFile" />
             </label>
           ) : (
             <>
               <label className="field">
-                <span>URL de la spécification (-u / --url)</span>
+                <span>Specification URL (-u / --url)</span>
                 <input
                   key="spec-url-field"
                   name="specUrl"
@@ -353,7 +353,7 @@ export function ArtifactsPage() {
                 />
               </label>
               <label className="field">
-                <span>Secret pour télécharger la spec (-s / secretName, optionnel)</span>
+                <span>Secret to fetch the spec (-s / secretName, optional)</span>
                 <input name="secretName" autoComplete="off" />
               </label>
             </>
@@ -375,70 +375,70 @@ export function ArtifactsPage() {
           </label>
           <label className="field">
             <span>
-              Gateway group ID (<code>gatewayGroupId</code>, défaut CLI : 1)
+              Gateway group ID (<code>gatewayGroupId</code>, CLI default: 1)
             </span>
             <input name="gatewayGroupId" placeholder="1" defaultValue="1" autoComplete="off" />
           </label>
           <label className="field">
-            <span>Backend secret ID (optionnel, <code>--backendSecret</code>)</span>
+            <span>Backend secret ID (optional, <code>--backendSecret</code>)</span>
             <input name="backendSecretId" autoComplete="off" />
           </label>
           <label className="field">
-            <span>serviceName (GraphQL, optionnel)</span>
+            <span>serviceName (GraphQL, optional)</span>
             <input name="serviceNameIs" autoComplete="off" />
           </label>
           <label className="field">
-            <span>serviceVersion (GraphQL, optionnel)</span>
+            <span>serviceVersion (GraphQL, optional)</span>
             <input name="serviceVersionIs" autoComplete="off" />
           </label>
           <label className="field row">
             <input type="checkbox" name="apiKeyIs" />
-            <span>Générer une clé API sur le plan (<code>--apiKey</code>)</span>
+            <span>Generate an API key on the plan (<code>--apiKey</code>)</span>
           </label>
           <button type="submit" className="btn primary">
-            Importer et exposer
+            Import and expose
           </button>
         </form>
       </CollapsibleTile>
 
-      <CollapsibleTile title="Importer un fichier" subtitle="POST /api/v1/artifacts (multipart), sans plan ni exposition.">
+      <CollapsibleTile title="Import a file" subtitle="POST /api/v1/artifacts (multipart), no plan or exposition.">
         <form onSubmit={onImportFile} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input type="file" name="file" required />
           <input name="serviceName" placeholder="serviceName (GraphQL)" />
           <input name="serviceVersion" placeholder="serviceVersion" />
           <button type="submit" className="btn primary">
-            Importer
+            Import
           </button>
         </form>
       </CollapsibleTile>
 
-      <CollapsibleTile title="Importer depuis URL" subtitle="POST /api/v1/artifacts (application/x-www-form-urlencoded).">
+      <CollapsibleTile title="Import from URL" subtitle="POST /api/v1/artifacts (application/x-www-form-urlencoded).">
         <form onSubmit={onImportUrl} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input name="url" placeholder="https://…" className="wide" required />
-          <input name="secretName" placeholder="secretName (optionnel)" />
+          <input name="secretName" placeholder="secretName (optional)" />
           <input name="serviceName" placeholder="serviceName" />
           <input name="serviceVersion" placeholder="serviceVersion" />
           <button type="submit" className="btn primary">
-            Importer URL
+            Import URL
           </button>
         </form>
       </CollapsibleTile>
 
-      <CollapsibleTile title="Attacher un fichier" subtitle="POST /api/v1/artifacts/attach">
+      <CollapsibleTile title="Attach a file" subtitle="POST /api/v1/artifacts/attach">
         <form onSubmit={onAttachFile} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input type="file" name="afile" required />
           <button type="submit" className="btn secondary">
-            Attacher
+            Attach
           </button>
         </form>
       </CollapsibleTile>
 
-      <CollapsibleTile title="Attacher depuis URL" subtitle="POST /api/v1/artifacts/attach (url + secret optionnel).">
+      <CollapsibleTile title="Attach from URL" subtitle="POST /api/v1/artifacts/attach (url + optional secret).">
         <form onSubmit={onAttachUrl} className="grid-form" style={{ marginTop: '0.75rem' }}>
           <input name="aurl" placeholder="https://…" className="wide" required />
-          <input name="asecret" placeholder="secretName (optionnel)" />
+          <input name="asecret" placeholder="secretName (optional)" />
           <button type="submit" className="btn secondary">
-            Attacher URL
+            Attach URL
           </button>
         </form>
       </CollapsibleTile>

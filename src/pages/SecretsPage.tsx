@@ -4,10 +4,10 @@ import { ApiError, apiClient } from '../api/client'
 function formatLoadError(e: unknown): string {
   if (!(e instanceof ApiError)) return String(e)
   const body = e.message.length > 1200 ? `${e.message.slice(0, 1200)}…` : e.message
-  return `HTTP ${e.status} : ${body}`
+  return `HTTP ${e.status}: ${body}`
 }
 
-/** Champs renvoyés par `GET /api/v1/secrets/refs` (SecretReferenceDTO côté control-plane). */
+/** Fields from `GET /api/v1/secrets/refs` (SecretReferenceDTO on the control plane). */
 type SecretRefRow = {
   id?: string
   organizationId?: string
@@ -44,12 +44,18 @@ export function SecretsPage() {
         <h1>Secrets</h1>
         <div className="row">
           <button type="button" className="btn secondary" onClick={() => void load()}>
-            Actualiser
+            Refresh
           </button>
         </div>
       </header>
 
-
+      <p className="muted small">
+        Same data as <code>reshapr secret list</code> via <code>GET /api/v1/secrets/refs</code> — see{' '}
+        <a href="https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/secret.ts" target="_blank" rel="noreferrer">
+          cli/src/commands/secret.ts
+        </a>
+        .
+      </p>
 
       {error && (
         <pre className="json-block error" style={{ whiteSpace: 'pre-wrap' }}>
@@ -62,15 +68,15 @@ export function SecretsPage() {
           {rows.length} secret{rows.length === 1 ? '' : 's'}
         </p>
         {rows.length === 0 && !error ? (
-          <p className="muted">Aucun secret.</p>
+          <p className="muted">No secrets.</p>
         ) : (
           <div className="table-wrap">
             <table className="data">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Organisation</th>
-                  <th>Nom</th>
+                  <th>Organization</th>
+                  <th>Name</th>
                   <th>Type</th>
                   <th>Description</th>
                 </tr>

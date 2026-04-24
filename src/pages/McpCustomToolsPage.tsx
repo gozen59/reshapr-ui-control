@@ -15,7 +15,7 @@ export function McpCustomToolsPage() {
   const runResolve = async (url: string) => {
     const trimmed = url.trim()
     if (!trimmed) {
-      setError('URL MCP vide')
+      setError('MCP URL is empty')
       return
     }
     setMcpUrl(trimmed)
@@ -77,7 +77,7 @@ export function McpCustomToolsPage() {
           URLs MCP
         </h2>
         <p className="muted small">
-          Dérive les URLs depuis les FQDN des gateways retournés par l’API (expositions actives).
+          Derives URLs from gateway FQDNs returned by the API (active expositions).
         </p>
         <div className="row wrap" style={{ marginBottom: '0.75rem' }}>
           <label className="row">
@@ -87,7 +87,7 @@ export function McpCustomToolsPage() {
               checked={urlMode === 'active'}
               onChange={() => setUrlMode('active')}
             />
-            Actives seulement
+            Active only
           </label>
           <label className="row">
             <input
@@ -96,10 +96,10 @@ export function McpCustomToolsPage() {
               checked={urlMode === 'all'}
               onChange={() => setUrlMode('all')}
             />
-            Toutes les expositions (active/&#123;id&#125; par id, 404 ignorés)
+            All expositions (active/&#123;id&#125; per id, 404s ignored)
           </label>
           <button type="button" className="btn secondary" disabled={urlListLoading} onClick={() => void loadMcpUrls()}>
-            {urlListLoading ? 'Chargement…' : 'Lister les URLs MCP'}
+            {urlListLoading ? 'Loading…' : 'List MCP URLs'}
           </button>
         </div>
 
@@ -134,7 +134,7 @@ export function McpCustomToolsPage() {
                     <td>
                       <div className="row wrap">
                         <button type="button" className="btn small secondary" onClick={() => setMcpUrl(row.url)}>
-                          Utiliser
+                          Use
                         </button>
                         <button
                           type="button"
@@ -154,18 +154,18 @@ export function McpCustomToolsPage() {
         )}
 
         {!urlListLoading && urlList.length === 0 && (
-          <p className="muted small">Clique sur « Lister les URLs MCP » pour remplir le tableau.</p>
+          <p className="muted small">Click &quot;List MCP URLs&quot; to populate the table.</p>
         )}
       </section>
 
       <section className="card">
         <h2 className="small" style={{ marginTop: 0 }}>
-          Résolution custom tools
+          Custom tools resolution
         </h2>
         <p className="muted small">
-          À partir du chemin <code>/mcp/&#123;org&#125;/&#123;service&#125;/&#123;version&#125;</code>, appels à{' '}
+          From path <code>/mcp/&#123;org&#125;/&#123;service&#125;/&#123;version&#125;</code>, calls{' '}
           <code>/api/v1/services</code>, <code>/api/v1/expositions</code>, <code>/api/v1/expositions/&#123;id&#125;</code>,{' '}
-          <code>/api/v1/artifacts/service/&#123;serviceId&#125;</code> puis éventuellement <code>/api/v1/services/&#123;id&#125;</code>.
+          <code>/api/v1/artifacts/service/&#123;serviceId&#125;</code>, then optionally <code>/api/v1/services/&#123;id&#125;</code>.
         </p>
         <form className="stack" onSubmit={(e) => void onSubmit(e)}>
           <label className="field">
@@ -174,13 +174,13 @@ export function McpCustomToolsPage() {
               className="wide"
               value={mcpUrl}
               onChange={(e) => setMcpUrl(e.target.value)}
-              placeholder="http://hôte:port/mcp/org/service/version"
+              placeholder="http://host:port/mcp/org/service/version"
               autoComplete="off"
             />
           </label>
           <div className="row">
             <button type="submit" className="btn primary" disabled={loading}>
-              {loading ? 'Résolution…' : 'Résoudre les custom tools'}
+              {loading ? 'Resolving…' : 'Resolve custom tools'}
             </button>
           </div>
         </form>
@@ -192,8 +192,8 @@ export function McpCustomToolsPage() {
         <section className="card">
           <p className="muted small">
             {result.source === 'artifacts_custom_tools'
-              ? 'Source : artifact YAML (filtré par includedOperations).'
-              : 'Source : opérations du service (intersection avec includedOperations).'}
+              ? 'Source: artifact YAML (filtered by includedOperations).'
+              : 'Source: service operations (intersection with includedOperations).'}
             {' — '}
             exposition <code>{result.expoId}</code>, service <code>{result.serviceId}</code>
           </p>
