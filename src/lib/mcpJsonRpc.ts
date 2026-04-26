@@ -1,6 +1,6 @@
 /**
  * Appels JSON-RPC MCP depuis le navigateur (POST direct sur l’URL MCP).
- * Même séquence que le script standalone : {@code initialize} puis méthode métier.
+ * Séquence MCP standard : {@code initialize} puis méthode métier ({@code prompts/list}, etc.).
  * Attention CORS : le serveur MCP doit autoriser l’origine de cette SPA.
  */
 

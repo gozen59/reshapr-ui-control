@@ -1,6 +1,6 @@
 /**
- * Resolves MCP custom tools from an endpoint URL and control-plane APIs
- * (business equivalent to standalone PostgreSQL logic, without modifying those scripts).
+ * Resolves MCP custom tools from an endpoint URL and control-plane REST APIs
+ * (artifacts `RESHAPR_CUSTOM_TOOLS` and service operations, filtered by exposition).
  */
 
 export type McpCustomToolsClient = {

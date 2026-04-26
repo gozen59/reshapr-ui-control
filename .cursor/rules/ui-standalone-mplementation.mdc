@@ -1,32 +1,23 @@
 ---
-description: UI implementation and coding conventions
-globs: scripts/**/*.mjs
+description: SPA UI implementation and MCP JSON-RPC conventions
+globs: "src/**/*.{ts,tsx}"
 alwaysApply: false
 ---
 
-# UI Implementation Conventions
+# UI implementation (Vite React app)
 
-When editing `scripts/control-plane-ui.mjs` or related UI scripts:
+When editing MCP-related pages or `src/lib/mcpJsonRpc.ts`:
 
-- Keep dependencies minimal; prefer Node built-ins unless a package is clearly needed.
-- Keep endpoints explicit and configurable with env vars:
-  - `UI_PORT`
-  - `CONTROL_PLANE_URL`
-  - `DEFAULT_MCP_URL`
-- For MCP discovery, always perform:
-  1. `initialize`
-  2. `tools/list`
-- Return structured JSON errors from API routes with clear messages.
-- Preserve French-friendly UI labels unless product direction changes.
+- Prefer the control-plane `apiClient()` for REST; use direct `fetch` JSON-RPC only for live MCP endpoints (`initialize`, `prompts/list`, etc.).
+- For MCP discovery from the browser, use the same sequence as the MCP spec: `initialize`, then the desired method (`prompts/list`, etc.). Protocol version is defined in `mcpJsonRpc.ts`.
+- Surface structured errors to the user (`McpRpcError`, `ApiError`).
 
 ## Reliability
 
-- Support both `reshapr config list` and `reshapr config ls`.
-- Support both `reshapr expo list` and `reshapr expo ls`.
-- Fail gracefully when CLI commands are unavailable.
+- MCP HTTP calls from the SPA require **CORS** on the MCP gateway for the UI origin.
+- Fail gracefully when the control plane or MCP endpoint is unreachable.
 
 ## UX
 
-- Keep a simple single-page dashboard layout.
-- Show count summaries (configs, expositions, tools).
-- Keep raw JSON visible for quick debugging.
+- Match existing page patterns (`card`, `data` tables, `json-block` for raw payloads).
+- Keep French-friendly copy only where the product already uses it; default UI strings follow existing pages.
