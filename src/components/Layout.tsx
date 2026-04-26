@@ -30,6 +30,9 @@ export function Layout() {
           <NavLink to="/mcp-custom-tools" className={navClass}>
             MCP custom tools
           </NavLink>
+          <NavLink to="/mcp-prompts" className={navClass}>
+            MCP prompts
+          </NavLink>
           <NavLink to="/secrets" className={navClass}>
             Secrets
           </NavLink>
