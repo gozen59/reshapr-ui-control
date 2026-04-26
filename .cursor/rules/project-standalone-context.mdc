@@ -1,26 +1,24 @@
 ---
-description: Reshapr UI control project context
+description: Reshapr UI control project context (Vite SPA)
 alwaysApply: true
 ---
 
 # reshapr-ui-control
 
-This workspace hosts a lightweight UI used to inspect a local Reshapr control plane and MCP endpoints.
+This workspace is the **npm / Vite + React** web console for a Reshapr control plane (`npm run dev`, `src/`).
 
 ## Current scope
 
-- PostgreSQL UI: `scripts/control-plane-ui.mjs` — default `http://localhost:555` (data via Docker `reshapr-postgres`)
-- CLI-only UI: `scripts/control-plane-cli-ui.mjs` — default `http://localhost:1556` (`reshapr` CLI; second screen for comparison)
-- Control plane base URL (display): `http://localhost:5555`
+- Control plane base URL: user-configurable at sign-in (see `VITE_RESHAPR_SERVER` in `docs/ARCHITECTURE.md`).
 - Example MCP endpoint: `http://localhost:7777/mcp/reshapr/BlazeMeter+API/4`
 
 ## Functional goal
 
-The UI should help operators:
+The SPA helps operators:
 
-- list Reshapr configurations
-- list Reshapr expositions
-- list available MCP tools from a selected endpoint (`initialize` + `tools/list`)
+- browse services, expositions, plans, artifacts, secrets, etc. via the same REST surface as the CLI
+- resolve **MCP custom tools** from an MCP URL using control-plane APIs (`/mcp-custom-tools`)
+- list **MCP prompts** via JSON-RPC on the endpoint (`/mcp-prompts`: `initialize` + `prompts/list`; browser CORS applies)
 
 ## Safety and behavior
 
