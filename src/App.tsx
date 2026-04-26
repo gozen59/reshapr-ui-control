@@ -15,6 +15,7 @@ import { SecretsPage } from './pages/SecretsPage'
 import { ServiceDetailPage } from './pages/ServiceDetailPage'
 import { ServicesPage } from './pages/ServicesPage'
 import { McpCustomToolsPage } from './pages/McpCustomToolsPage'
+import { McpPromptsPage } from './pages/McpPromptsPage'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/expositions" element={<ExpositionsPage />} />
           <Route path="/expositions/:id" element={<ExpositionDetailPage />} />
           <Route path="/mcp-custom-tools" element={<McpCustomToolsPage />} />
+          <Route path="/mcp-prompts" element={<McpPromptsPage />} />
           <Route path="/secrets" element={<SecretsPage />} />
           <Route path="/gateway-groups" element={<GatewayGroupsPage />} />
           <Route path="/quotas" element={<QuotasPage />} />
