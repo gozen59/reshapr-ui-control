@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/gozen59-reshapr-ui-control-badge.png)](https://mseep.ai/app/gozen59-reshapr-ui-control)
+
 # reshapr-ui-control
 
 **Purpose:** this project exists to provide a **web UI** for [Reshapr](https://github.com/reshaprio/reshapr) — a browser-based console for the control plane that complements the **Reshapr CLI** from the same GitHub repository, without replacing it (same REST surface, different workflows).
