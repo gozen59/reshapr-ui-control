@@ -24,9 +24,9 @@
 		NonNullable<DashboardStats['gatewayRegisteredDetail']>['source'],
 		string
 	> = {
-		quota_only: 'Quota gateway.count (utilisé > expositions actives)',
-		active_expositions_only: 'Expositions actives uniquement',
-		max_quota_and_active: 'Max(quota, expositions actives)'
+		quota_only: 'Quota gateway.count (used > active expositions)',
+		active_expositions_only: 'Active expositions only',
+		max_quota_and_active: 'Max(quota, active expositions)'
 	};
 
 	async function load() {
@@ -60,21 +60,20 @@
 </PageHeader>
 
 <p class="text-muted-foreground mb-4 text-sm">
-	Synthèse pour <strong>votre organisation</strong> (token JWT), via les API v1 déjà exposées par le control
-	plane — sans modification backend.
+	Summary for <strong>your organization</strong> (JWT token), using v1 APIs exposed by the control plane — no
+	backend changes.
 	{#if auth.serverUrl}
 		<code class="text-xs"> {auth.serverUrl || '(proxy)'}</code>
 	{/if}
 </p>
 
 <Alert.Root class="mb-6">
-	<Alert.Title>Limites de l’API v1</Alert.Title>
+	<Alert.Title>v1 API limits</Alert.Title>
 	<Alert.Description class="text-sm">
-		Les comptages <strong>utilisateurs</strong> et <strong>organisations (plateforme)</strong> ne sont pas
-		exposés sur <code class="text-xs">/api/v1/*</code> (réservés à <code class="text-xs">/api/admin/*</code> côté
-		reshapr). Les cartes correspondantes restent vides tant que le projet reshapr n’ajoute pas d’endpoint dédié.
-		Gateways « healthy » = présents sur une exposition active avec au moins un FQDN (approximation sans heartbeat
-		REST).
+		Platform <strong>user</strong> and <strong>organization</strong> counts are not on
+		<code class="text-xs">/api/v1/*</code> (they live under <code class="text-xs">/api/admin/*</code> on reshapr).
+		Those cards stay empty until reshapr adds a dedicated endpoint. “Healthy” gateways = on an active exposition
+		with at least one FQDN (approximation without a REST heartbeat).
 	</Alert.Description>
 </Alert.Root>
 
@@ -90,7 +89,7 @@
 		</Card.Header>
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.userCount)}</p>
-			<p class="text-muted-foreground mt-1 text-xs">Non disponible via API v1</p>
+			<p class="text-muted-foreground mt-1 text-xs">Not available on v1 API</p>
 		</Card.Content>
 	</Card.Root>
 
@@ -102,7 +101,7 @@
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.organizationCount)}</p>
 			<p class="text-muted-foreground mt-1 text-xs">
-				Org courante : <code class="text-xs">{stats?.organizationId ?? '…'}</code>
+				Current org: <code class="text-xs">{stats?.organizationId ?? '…'}</code>
 			</p>
 		</Card.Content>
 	</Card.Root>
@@ -114,7 +113,7 @@
 		</Card.Header>
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.serviceCount)}</p>
-			<p class="text-muted-foreground mt-1 text-xs">Enregistrés (organisation courante)</p>
+			<p class="text-muted-foreground mt-1 text-xs">Registered (current organization)</p>
 		</Card.Content>
 	</Card.Root>
 
@@ -125,7 +124,7 @@
 		</Card.Header>
 		<Card.Content class="space-y-3">
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.gatewayRegisteredCount)}</p>
-			<p class="text-muted-foreground text-xs">Quotas ou expositions actives (voir détail)</p>
+			<p class="text-muted-foreground text-xs">Quota or active expositions (see breakdown)</p>
 			{#if stats?.gatewayRegisteredDetail}
 				{@const d = stats.gatewayRegisteredDetail}
 				<Collapsible.Root bind:open={gatewayDetailOpen}>
@@ -133,34 +132,34 @@
 						class="text-primary text-xs font-medium hover:underline"
 						type="button"
 					>
-						{gatewayDetailOpen ? 'Masquer' : 'Afficher'} le détail du calcul
+						{gatewayDetailOpen ? 'Hide' : 'Show'} calculation breakdown
 					</Collapsible.Trigger>
 					<Collapsible.Content class="mt-3 space-y-3 text-xs">
 						<p class="text-muted-foreground">
-							<strong>Source affichée :</strong>
+							<strong>Displayed source:</strong>
 							{gatewaySourceLabel[d.source]}
 						</p>
 						{#if d.quota}
 							<div class="bg-muted/50 rounded-lg border p-3">
 								<p class="font-medium">Quota <code>gateway.count</code></p>
 								<ul class="text-muted-foreground mt-1 list-inside list-disc space-y-0.5">
-									<li>utilisé = limit − remaining = {d.quota.limit} − {d.quota.remaining} =
+									<li>used = limit − remaining = {d.quota.limit} − {d.quota.remaining} =
 										<strong class="text-foreground">{d.quota.used}</strong></li>
 								</ul>
 							</div>
 						{:else}
-							<p class="text-muted-foreground">Quota <code>gateway.count</code> non disponible.</p>
+							<p class="text-muted-foreground">Quota <code>gateway.count</code> not available.</p>
 						{/if}
 						<div class="bg-muted/50 rounded-lg border p-3">
 							<p class="font-medium">
-								GET <code>/api/v1/expositions/active</code> — gateways dédupliqués par id/name
+								GET <code>/api/v1/expositions/active</code> — gateways deduplicated by id/name
 							</p>
 							<p class="text-muted-foreground mt-1">
-								{d.fromActiveExpositions.registered} gateway(s) unique(s), {d.fromActiveExpositions.healthy}
-								avec FQDN (healthy)
+								{d.fromActiveExpositions.registered} unique gateway(s), {d.fromActiveExpositions.healthy}
+								with FQDN (healthy)
 							</p>
 							{#if d.fromActiveExpositions.gateways.length === 0}
-								<p class="text-muted-foreground mt-2">Aucun gateway dans les expositions actives.</p>
+								<p class="text-muted-foreground mt-2">No gateways on active expositions.</p>
 							{:else}
 								<ul class="mt-2 max-h-48 space-y-2 overflow-y-auto">
 									{#each d.fromActiveExpositions.gateways as gw (gw.key)}
@@ -170,11 +169,11 @@
 												<span class="text-muted-foreground"> — {gw.name}</span>
 											{/if}
 											<span class="text-muted-foreground">
-												· FQDN : {gw.hasFqdn ? 'oui' : 'non'}
+												· FQDN: {gw.hasFqdn ? 'yes' : 'no'}
 											</span>
 											<br />
 											<span class="text-muted-foreground">
-												expositions : {gw.onActiveExpositions.join(', ')}
+												expositions: {gw.onActiveExpositions.join(', ')}
 											</span>
 										</li>
 									{/each}
@@ -182,7 +181,7 @@
 							{/if}
 						</div>
 						<p class="text-muted-foreground">
-							Valeur carte = {#if d.quota}
+							Card value = {#if d.quota}
 								max({d.quota.used}, {d.fromActiveExpositions.registered}) = <strong
 									class="text-foreground">{d.displayedCount}</strong
 								>
@@ -203,7 +202,7 @@
 		</Card.Header>
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight text-primary">{fmt(stats?.gatewayHealthyCount)}</p>
-			<p class="text-muted-foreground mt-1 text-xs">Expositions actives + FQDN</p>
+			<p class="text-muted-foreground mt-1 text-xs">Active expositions + FQDN</p>
 		</Card.Content>
 	</Card.Root>
 
@@ -214,7 +213,7 @@
 		</Card.Header>
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.gatewayGroupsCount)}</p>
-			<p class="text-muted-foreground mt-1 text-xs">Via quotas (utilisés)</p>
+			<p class="text-muted-foreground mt-1 text-xs">Via quotas (used)</p>
 		</Card.Content>
 	</Card.Root>
 
@@ -225,7 +224,7 @@
 		</Card.Header>
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.expositionCount)}</p>
-			<p class="text-muted-foreground mt-1 text-xs">Via quotas (utilisés)</p>
+			<p class="text-muted-foreground mt-1 text-xs">Via quotas (used)</p>
 		</Card.Content>
 	</Card.Root>
 </div>
