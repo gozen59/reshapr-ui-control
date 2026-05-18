@@ -11,11 +11,18 @@ export type McpPromptsClient = {
   listArtifactsByService: (serviceId: string) => Promise<unknown[]>
 }
 
+export type McpPromptArtifactYaml = {
+  name: string
+  content: string
+}
+
 export type McpPromptsResolution = {
   prompts: McpPromptDescriptor[]
   source: 'artifacts_prompts'
   serviceId: string
   artifactNames: string[]
+  /** Full YAML content per `RESHAPR_PROMPTS` artifact. */
+  artifactYamls: McpPromptArtifactYaml[]
 }
 
 type ServiceRow = {
@@ -131,14 +138,19 @@ export async function resolveMcpPromptsFromUrl(
   )
   if (promptArtifacts.length === 0) {
     throw new Error(
-      'No REHAPR_PROMPTS artifact on this service. Attach a kind: Prompts YAML on Artifacts, then retry.',
+      'No RESHAPR_PROMPTS artifact on this service. Attach a kind: Prompts YAML on Artifacts, then retry.',
     )
   }
 
   const byName = new Map<string, McpPromptDescriptor>()
   const artifactNames: string[] = []
+  const artifactYamls: McpPromptArtifactYaml[] = []
   for (const artifact of promptArtifacts) {
+    const label = artifact.name || `RESHAPR_PROMPTS-${artifactYamls.length + 1}`
     if (artifact.name) artifactNames.push(artifact.name)
+    if (artifact.content) {
+      artifactYamls.push({ name: label, content: artifact.content })
+    }
     for (const p of parseReshaprPromptsYaml(artifact.content || '')) {
       byName.set(p.name, p)
     }
@@ -149,5 +161,6 @@ export async function resolveMcpPromptsFromUrl(
     source: 'artifacts_prompts',
     serviceId: service.id,
     artifactNames,
+    artifactYamls,
   }
 }

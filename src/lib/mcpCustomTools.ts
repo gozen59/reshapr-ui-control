@@ -23,6 +23,8 @@ export type McpCustomToolsResolution = {
   source: 'artifacts_custom_tools' | 'services_operations'
   expoId: string
   serviceId: string
+  /** Full `RESHAPR_CUSTOM_TOOLS` artifact YAML when tools come from that artifact. */
+  artifactYaml?: string
 }
 
 import { parseMcpUrl } from './mcpUrl'
@@ -260,6 +262,7 @@ export async function resolveMcpCustomToolsFromUrl(
       source: 'artifacts_custom_tools',
       expoId: expo.id,
       serviceId: service.id,
+      artifactYaml: yamlArtifact?.content ?? undefined,
     }
   }
   const view = (await client.getService(service.id)) as ServiceView
