@@ -9,11 +9,15 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { parseOperationsList } from '$lib/operationsList';
 
 	let error = $state<string | null>(null);
 	let apiKeyShown = $state<string | null>(null);
 	let createdId = $state<string | null>(null);
 	let genKey = $state(false);
+	let includedOperationsText = $state('');
+	let excludedOperationsText = $state('');
 
 	async function onSubmit(ev: SubmitEvent) {
 		ev.preventDefault();
@@ -31,6 +35,9 @@
 			return;
 		}
 		try {
+			const includedOperations = parseOperationsList(includedOperationsText);
+			const excludedOperations = parseOperationsList(excludedOperationsText);
+
 			const body: Record<string, unknown> = {
 				name,
 				serviceId,
@@ -38,7 +45,10 @@
 				description,
 				backendSecretId
 			};
+			if (includedOperations.length) body.includedOperations = includedOperations;
+			if (excludedOperations.length) body.excludedOperations = excludedOperations;
 			if (genKey) body.apiKey = 'generate-me';
+
 			const out = (await apiClient().createConfigurationPlan(body)) as {
 				id: string;
 				apiKey?: string;
@@ -53,6 +63,16 @@
 </script>
 
 <PageHeader title="New plan" />
+
+<Alert.Root class="mb-4">
+	<Alert.Title>Configuration plan</Alert.Title>
+	<Alert.Description>
+		Same as <code class="text-xs">reshapr config create</code>. Use <strong>Included operations</strong>
+		(<code class="text-xs">--io</code>) to expose only selected API routes. Attach a
+		<code class="text-xs">CustomTools</code> YAML on <a href="/artifacts" class="text-primary hover:underline">Artifacts</a>
+		for MCP custom tools (step 2).
+	</Alert.Description>
+</Alert.Root>
 
 {#if apiKeyShown}
 	<Alert.Root class="mb-4">
@@ -72,20 +92,26 @@
 	<ApiErrorAlert message={error} />
 {/if}
 
-<Card.Root class="max-w-lg">
+<Card.Root class="max-w-2xl">
 	<Card.Content class="pt-6">
 		<form class="space-y-4" onsubmit={onSubmit}>
 			<div class="space-y-2">
 				<Label for="name">Name</Label>
-				<Input id="name" name="name" required />
+				<Input id="name" name="name" placeholder="blazemeter-tests-operations" required />
 			</div>
 			<div class="space-y-2">
 				<Label for="serviceId">Service ID</Label>
-				<Input id="serviceId" name="serviceId" required />
+				<Input id="serviceId" name="serviceId" placeholder="from Services list" required />
 			</div>
 			<div class="space-y-2">
 				<Label for="backendEndpoint">Backend endpoint URL</Label>
-				<Input id="backendEndpoint" name="backendEndpoint" class="w-full" required />
+				<Input
+					id="backendEndpoint"
+					name="backendEndpoint"
+					class="w-full"
+					placeholder="https://a.blazemeter.com/api/v4"
+					required
+				/>
 			</div>
 			<div class="space-y-2">
 				<Label for="description">Description</Label>
@@ -95,11 +121,38 @@
 				<Label for="backendSecretId">Backend secret ID</Label>
 				<Input id="backendSecretId" name="backendSecretId" />
 			</div>
+
+			<div class="space-y-2">
+				<Label for="includedOperations">Included operations (<code class="text-xs">--io</code>)</Label>
+				<Textarea
+					id="includedOperations"
+					bind:value={includedOperationsText}
+					rows={4}
+					class="font-mono text-xs"
+					placeholder={'POST /tests/{testId}/start\nGET /masters'}
+				/>
+				<p class="text-muted-foreground text-xs">
+					One operation per line, or a JSON array. Leave empty to include all service operations (after
+					custom-tools filtering).
+				</p>
+			</div>
+
+			<div class="space-y-2">
+				<Label for="excludedOperations">Excluded operations (<code class="text-xs">--eo</code>, optional)</Label>
+				<Textarea
+					id="excludedOperations"
+					bind:value={excludedOperationsText}
+					rows={3}
+					class="font-mono text-xs"
+					placeholder="Only used when included operations is empty"
+				/>
+			</div>
+
 			<div class="flex items-center gap-2">
 				<Checkbox id="apiKey" bind:checked={genKey} />
 				<Label for="apiKey">Generate an API key</Label>
 			</div>
-			<Button type="submit">Create</Button>
+			<Button type="submit">Create plan</Button>
 		</form>
 	</Card.Content>
 </Card.Root>

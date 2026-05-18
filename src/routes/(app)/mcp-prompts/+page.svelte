@@ -3,6 +3,7 @@
 	import ApiErrorAlert from '$lib/components/ApiErrorAlert.svelte';
 	import JsonBlock from '$lib/components/JsonBlock.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import * as Alert from '$lib/components/ui/alert';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
@@ -10,15 +11,17 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Table from '$lib/components/ui/table';
 	import { listMcpEndpointUrls, type McpUrlListItem } from '$lib/mcpEndpointUrls';
-	import { listMcpPromptsFromUrl, McpRpcError, type McpPromptDescriptor } from '$lib/mcpJsonRpc';
+	import { resolveMcpPromptsFromUrl, type McpPromptsResolution } from '$lib/mcpPrompts';
 
 	let mcpUrl = $state('');
 	let urlMode = $state<'active' | 'all'>('active');
 	let urlList = $state<McpUrlListItem[]>([]);
 	let urlListLoading = $state(false);
-	let prompts = $state<McpPromptDescriptor[] | null>(null);
+	let result = $state<McpPromptsResolution | null>(null);
 	let error = $state<string | null>(null);
 	let loading = $state(false);
+
+	const prompts = $derived(result?.prompts ?? []);
 
 	async function runListPrompts(url: string) {
 		const trimmed = url.trim();
@@ -28,17 +31,16 @@
 		}
 		mcpUrl = trimmed;
 		error = null;
-		prompts = null;
+		result = null;
 		loading = true;
 		try {
-			const payload = await listMcpPromptsFromUrl(trimmed);
-			prompts = payload.prompts;
+			const c = apiClient();
+			result = await resolveMcpPromptsFromUrl(trimmed, {
+				listServicesPage: (page, size) => c.listServicesPage(page, size),
+				listArtifactsByService: (serviceId) => c.listArtifactsByService(serviceId)
+			});
 		} catch (e) {
-			if (e instanceof McpRpcError) {
-				error = e.message;
-			} else {
-				error = e instanceof ApiError ? e.message : String(e);
-			}
+			error = e instanceof ApiError ? e.message : String(e);
 		} finally {
 			loading = false;
 		}
@@ -70,6 +72,16 @@
 </script>
 
 <PageHeader title="MCP — Prompts" />
+
+<Alert.Root class="mb-4">
+	<Alert.Title>Prompts from the control plane</Alert.Title>
+	<Alert.Description class="text-sm">
+		Listing uses artifact <code class="text-xs">RESHAPR_PROMPTS</code> on the service (same path as
+		<a href="/mcp-custom-tools" class="text-primary hover:underline">MCP custom tools</a>), not a direct browser call
+		to the MCP gateway — avoids CORS / <code class="text-xs">Failed to fetch</code>. Attach YAML on
+		<a href="/artifacts" class="text-primary hover:underline">Artifacts → Attach MCP prompts</a>.
+	</Alert.Description>
+</Alert.Root>
 
 <Card.Root class="mb-6">
 	<Card.Header>
@@ -150,10 +162,9 @@
 
 <Card.Root class="mb-6">
 	<Card.Header>
-		<Card.Title class="text-base">Prompts (JSON-RPC)</Card.Title>
+		<Card.Title class="text-base">List prompts</Card.Title>
 		<Card.Description>
-			HTTP POST on the MCP URL: <code class="text-xs">initialize</code> then
-			<code class="text-xs">prompts/list</code>. Requires CORS on the MCP gateway for this UI origin.
+			Resolves <code class="text-xs">RESHAPR_PROMPTS</code> for the service encoded in the MCP URL path.
 		</Card.Description>
 	</Card.Header>
 	<Card.Content>
@@ -179,11 +190,15 @@
 	<ApiErrorAlert message={error} />
 {/if}
 
-{#if prompts !== null}
+{#if result}
 	<Card.Root>
 		<Card.Content class="pt-6">
 			<p class="text-muted-foreground mb-4 text-sm">
-				{prompts.length} prompt(s) from <code class="text-xs">prompts/list</code>
+				{prompts.length} prompt(s) from artifact(s)
+				{#if result.artifactNames.length}
+					<code class="text-xs">{result.artifactNames.join(', ')}</code>
+				{/if}
+				· service <code class="text-xs">{result.serviceId}</code>
 			</p>
 			{#if prompts.length > 0}
 				<div class="mb-4 flex flex-wrap gap-2">
@@ -192,7 +207,7 @@
 					{/each}
 				</div>
 			{/if}
-			<JsonBlock value={{ prompts }} />
+			<JsonBlock value={{ prompts, source: result.source, serviceId: result.serviceId }} />
 		</Card.Content>
 	</Card.Root>
 {/if}

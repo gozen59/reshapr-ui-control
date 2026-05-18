@@ -9,6 +9,8 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { parseOperationsList } from '$lib/operationsList';
 
 	type Api = ReturnType<typeof apiClient>;
 
@@ -17,6 +19,8 @@
 		gatewayGroupId: string;
 		backendSecretId?: string;
 		genApiKey: boolean;
+		includedOperations?: string[];
+		excludedOperations?: string[];
 	};
 
 	type ExposeResult = {
@@ -37,13 +41,16 @@
 	let importSource = $state<'file' | 'url'>('file');
 	let genKeyImport = $state(false);
 
-	let importExposeOpen = $state(true);
+	let attachCustomToolsOpen = $state(true);
+	let attachPromptsOpen = $state(false);
+	let importExposeOpen = $state(false);
 	let importFileOpen = $state(false);
 	let importUrlOpen = $state(false);
 	let attachFileOpen = $state(false);
 	let attachUrlOpen = $state(false);
 	let specUrl = $state(DEFAULT_OPEN_METEO_URL);
 	let backendEndpointExpose = $state('');
+	let includedOperationsExpose = $state('');
 
 	$effect(() => {
 		if (importSource === 'url') {
@@ -78,6 +85,8 @@
 			backendSecretId: opts.backendSecretId
 		};
 		if (opts.genApiKey) planBody.apiKey = 'generate-me';
+		if (opts.includedOperations?.length) planBody.includedOperations = opts.includedOperations;
+		if (opts.excludedOperations?.length) planBody.excludedOperations = opts.excludedOperations;
 
 		const plan = (await c.createConfigurationPlan(planBody)) as { id: string; apiKey?: string };
 		const expo = (await c.createExposition({
@@ -100,6 +109,21 @@
 		importServiceApiKey = null;
 	}
 
+	function formatAttachSuccess(out: unknown): string {
+		if (out && typeof out === 'object') {
+			const o = out as Record<string, unknown>;
+			const name = typeof o.name === 'string' ? o.name : undefined;
+			const type = typeof o.type === 'string' ? o.type : undefined;
+			const id = typeof o.id === 'string' ? o.id : undefined;
+			const bits = ['Attach OK'];
+			if (type) bits.push(`type ${type}`);
+			if (name) bits.push(`« ${name} »`);
+			if (id) bits.push(`id ${id}`);
+			return bits.join(' — ');
+		}
+		return `Attach OK : ${JSON.stringify(out)}`;
+	}
+
 	async function onImportAndExpose(ev: SubmitEvent) {
 		ev.preventDefault();
 		const form = ev.target as HTMLFormElement;
@@ -119,6 +143,13 @@
 		}
 		const gatewayGroupId = String(fd.get('gatewayGroupId') || '').trim() || '1';
 		const backendSecretId = String(fd.get('backendSecretId') || '').trim() || undefined;
+		let includedOperations: string[] = [];
+		try {
+			includedOperations = parseOperationsList(includedOperationsExpose);
+		} catch (e) {
+			err = e instanceof Error ? e.message : String(e);
+			return;
+		}
 
 		const extra: Record<string, string> = {};
 		if (sn) extra.serviceName = sn;
@@ -155,7 +186,8 @@
 				backendEndpoint,
 				gatewayGroupId,
 				backendSecretId,
-				genApiKey: genKeyImport
+				genApiKey: genKeyImport,
+				includedOperations: includedOperations.length ? includedOperations : undefined
 			});
 			if (out.planApiKey) importServiceApiKey = out.planApiKey;
 			const via = importSource === 'file' ? '-f' : '-u';
@@ -239,7 +271,7 @@
 		}
 		try {
 			const out = await apiClient().attachArtifactFile(file);
-			msg = `Attach OK : ${JSON.stringify(out)}`;
+			msg = formatAttachSuccess(out);
 			form.reset();
 		} catch (e) {
 			err = e instanceof ApiError ? e.message : String(e);
@@ -261,7 +293,7 @@
 		}
 		try {
 			const out = await apiClient().attachArtifactUrl(url, secret || undefined);
-			msg = `Attach URL OK : ${JSON.stringify(out)}`;
+			msg = formatAttachSuccess(out);
 			form.reset();
 		} catch (e) {
 			err = e instanceof ApiError ? e.message : String(e);
@@ -270,6 +302,29 @@
 </script>
 
 <PageHeader title="Artifacts" />
+
+<Alert.Root class="mb-4">
+	<Alert.Title>Typical BlazeMeter / OpenAPI flow</Alert.Title>
+	<Alert.Description class="space-y-1 text-sm">
+		<ol class="list-decimal space-y-1 pl-5">
+			<li><strong>Import</strong> the OpenAPI spec (import + exposition or import only).</li>
+			<li>
+				<strong>Plan</strong> — restrict operations with <code class="text-xs">--io</code> on import+expose or on
+				<a href="/plans/new" class="text-primary hover:underline">Plans → New plan</a>.
+			</li>
+			<li>
+				<strong>Custom tools / prompts</strong> — attach YAML <code class="text-xs">CustomTools</code> or
+				<code class="text-xs">Prompts</code> to the same service (<code class="text-xs">reshapr attach -f</code>,
+				sections below).
+			</li>
+			<li>
+				Verify on
+				<a href="/mcp-custom-tools" class="text-primary hover:underline">MCP custom tools</a> and
+				<a href="/mcp-prompts" class="text-primary hover:underline">MCP prompts</a> after exposing the plan.
+			</li>
+		</ol>
+	</Alert.Description>
+</Alert.Root>
 
 <p class="text-muted-foreground mb-4 text-sm">
 	Import and attach — same contracts as the CLI. Each section is collapsible.
@@ -293,6 +348,102 @@
 		</Alert.Description>
 	</Alert.Root>
 {/if}
+
+<Collapsible.Root bind:open={attachCustomToolsOpen} class="mb-4">
+	<Card.Root>
+		<Collapsible.Trigger class="w-full text-left">
+			<Card.Header>
+				<Card.Title class="text-base">Attach custom tools (YAML)</Card.Title>
+				<Card.Description>
+					Like <code class="text-xs">reshapr attach -f custom-tools.yaml</code> —
+					<code class="text-xs">POST /api/v1/artifacts/attach</code>. Document
+					<code class="text-xs">kind: CustomTools</code> (schema
+					<code class="text-xs">CustomTools-v1alpha1</code>) bound to an existing service. Example in the
+					<a
+						href="https://github.com/reshaprio/reshapr/blob/main/dev/github-api-custom-tools.yaml"
+						target="_blank"
+						rel="noreferrer"
+						class="text-primary hover:underline"
+					>reshapr repo</a>.
+				</Card.Description>
+			</Card.Header>
+		</Collapsible.Trigger>
+		<Collapsible.Content>
+			<Card.Content class="space-y-4">
+				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="customToolsFile">Custom tools file</Label>
+						<Input id="customToolsFile" type="file" name="afile" accept=".yaml,.yml,.json" required />
+					</div>
+					<Button type="submit">Attach file</Button>
+				</form>
+				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="customToolsUrl">Or URL</Label>
+						<Input id="customToolsUrl" name="aurl" placeholder="https://…" class="w-full" required />
+					</div>
+					<div class="space-y-2">
+						<Label for="customToolsSecret">Secret (optional)</Label>
+						<Input id="customToolsSecret" name="asecret" placeholder="secretName" />
+					</div>
+					<Button type="submit" variant="secondary">Attach URL</Button>
+				</form>
+			</Card.Content>
+		</Collapsible.Content>
+	</Card.Root>
+</Collapsible.Root>
+
+<Collapsible.Root bind:open={attachPromptsOpen} class="mb-4">
+	<Card.Root>
+		<Collapsible.Trigger class="w-full text-left">
+			<Card.Header>
+				<Card.Title class="text-base">Attach MCP prompts (YAML)</Card.Title>
+				<Card.Description>
+					Same endpoint as custom tools: <code class="text-xs">reshapr attach -f prompts.yaml</code> →
+					<code class="text-xs">POST /api/v1/artifacts/attach</code>. Document
+					<code class="text-xs">kind: Prompts</code> (<code class="text-xs">Prompts-v1alpha1</code>) with
+					<code class="text-xs">service.name</code> / <code class="text-xs">service.version</code> matching the
+					imported service. Example:
+					<a
+						href="https://github.com/reshaprio/reshapr/blob/main/dev/apipastry-prompts.yaml"
+						target="_blank"
+						rel="noreferrer"
+						class="text-primary hover:underline"
+					>apipastry-prompts.yaml</a>.
+				</Card.Description>
+			</Card.Header>
+		</Collapsible.Trigger>
+		<Collapsible.Content>
+			<Card.Content class="space-y-4">
+				<p class="text-muted-foreground text-xs">
+					Minimal shape: <code class="text-xs">apiVersion: reshapr.io/v1alpha1</code>,
+					<code class="text-xs">kind: Prompts</code>, <code class="text-xs">service</code>,
+					<code class="text-xs">prompts:</code> map of prompt definitions. Then list them on
+					<a href="/mcp-prompts" class="text-primary hover:underline">MCP prompts</a> via
+					<code class="text-xs">prompts/list</code> on the exposition URL.
+				</p>
+				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="promptsFile">Prompts file</Label>
+						<Input id="promptsFile" type="file" name="afile" accept=".yaml,.yml" required />
+					</div>
+					<Button type="submit">Attach file</Button>
+				</form>
+				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="promptsUrl">Or URL</Label>
+						<Input id="promptsUrl" name="aurl" placeholder="https://…" class="w-full" required />
+					</div>
+					<div class="space-y-2">
+						<Label for="promptsSecret">Secret (optional)</Label>
+						<Input id="promptsSecret" name="asecret" placeholder="secretName" />
+					</div>
+					<Button type="submit" variant="secondary">Attach URL</Button>
+				</form>
+			</Card.Content>
+		</Collapsible.Content>
+	</Card.Root>
+</Collapsible.Root>
 
 <Collapsible.Root bind:open={importExposeOpen} class="mb-4">
 	<Card.Root>
@@ -394,6 +545,16 @@
 						<Label for="serviceVersionIs">serviceVersion (GraphQL, optional)</Label>
 						<Input id="serviceVersionIs" name="serviceVersionIs" autocomplete="off" />
 					</div>
+					<div class="space-y-2">
+						<Label for="includedOperationsExpose">Included operations (<code class="text-xs">--io</code>, optional)</Label>
+						<Textarea
+							id="includedOperationsExpose"
+							bind:value={includedOperationsExpose}
+							rows={3}
+							class="font-mono text-xs"
+							placeholder={'POST /tests/{testId}/start\nGET /masters'}
+						/>
+					</div>
 					<div class="flex items-center gap-2">
 						<Checkbox id="apiKeyIs" bind:checked={genKeyImport} />
 						<Label for="apiKeyIs">Generate an API key on the plan (<code class="text-xs">--apiKey</code>)</Label>
@@ -452,8 +613,8 @@
 	<Card.Root>
 		<Collapsible.Trigger class="w-full text-left">
 			<Card.Header>
-				<Card.Title class="text-base">Attach a file</Card.Title>
-				<Card.Description>POST /api/v1/artifacts/attach</Card.Description>
+				<Card.Title class="text-base">Attach a file (generic)</Card.Title>
+				<Card.Description>POST /api/v1/artifacts/attach — any artifact type (see Custom tools section above).</Card.Description>
 			</Card.Header>
 		</Collapsible.Trigger>
 		<Collapsible.Content>
