@@ -5,10 +5,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { STORAGE_KEY_SAAS_PORTAL } from '$lib/api/client';
 	import { isSaasPortalUrl, normalizeServerUrl } from '$lib/auth/saas';
-	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
-	import AppBrand from '$lib/components/AppBrand.svelte';
 
 	let error = $state<string | null>(null);
 	let done = $state(false);
@@ -44,24 +41,21 @@
 	});
 </script>
 
-<div class="flex min-h-screen items-center justify-center p-6">
-	<Card.Root class="w-full max-w-md">
-		<Card.Header class="space-y-4">
-			<AppBrand class="flex w-full justify-center" />
-			<Card.Title class="text-xl">Completing sign-in</Card.Title>
-		</Card.Header>
-		<Card.Content class="space-y-4">
-			{#if done}
-				<p class="text-muted-foreground text-sm">Redirecting…</p>
-			{:else if error}
-				<Alert.Root variant="destructive">
-					<Alert.Title>Sign-in failed</Alert.Title>
-					<Alert.Description>{error}</Alert.Description>
-				</Alert.Root>
-				<Button href="/login" class="w-full">Back to sign in</Button>
-			{:else}
-				<p class="text-muted-foreground text-sm">Processing authentication…</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
+<div class="flex flex-1 items-center justify-center p-6">
+	<div class="w-full max-w-md space-y-6 rounded-xl border bg-card p-8 shadow-lg text-center">
+		<h1 class="text-2xl font-bold tracking-tight">Completing sign-in</h1>
+		{#if done}
+			<p class="text-muted-foreground text-sm">Redirecting to the console…</p>
+		{:else if error}
+			<div
+				class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+				role="alert"
+			>
+				{error}
+			</div>
+			<Button href="/login" class="w-full">Back to sign in</Button>
+		{:else}
+			<p class="text-muted-foreground text-sm">Processing authentication…</p>
+		{/if}
+	</div>
 </div>

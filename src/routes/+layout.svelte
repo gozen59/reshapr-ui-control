@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import AppFooter from '$lib/components/AppFooter.svelte';
 
 	let { children } = $props();
 </script>
@@ -11,6 +12,9 @@
 	<title>reShapr UI Control</title>
 </svelte:head>
 
-<div class="min-h-screen">
-	{@render children()}
+<div class="flex min-h-screen flex-col bg-background">
+	<div class="flex min-h-0 flex-1 flex-col">
+		{@render children()}
+	</div>
+	<AppFooter />
 </div>
