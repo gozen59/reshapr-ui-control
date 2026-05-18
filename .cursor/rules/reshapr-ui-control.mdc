@@ -4,21 +4,20 @@ globs: "**/*"
 alwaysApply: true
 ---
 
-# reshapr-ui-control — agent context
+# reShapr UI Control — agent context
 
 ## Repositories
 
-- **This workspace**: SPA console for the Reshapr control plane (`src/api/client.ts` = same REST paths as the [Reshapr](https://github.com/reshaprio/reshapr) CLI).
-- **Backend / CLI**: not in this repo. Clone [reshapr](https://github.com/reshaprio/reshapr) separately when you need Quarkus sources or the CLI — relevant paths there are `control-plane/` (API server) and `cli/` (TypeScript CLI). Treat paths in archived docs under `docs/` as examples, not as assumptions about the contributor’s disk layout.
+- **This workspace**: SvelteKit SPA console for the Reshapr control plane (`src/lib/api/client.ts` = same REST paths as the [Reshapr](https://github.com/reshaprio/reshapr) CLI). UI: Tailwind + shadcn-svelte.
+- **Backend / CLI**: not in this repo. Clone [reshapr](https://github.com/reshaprio/reshapr) for Quarkus (`control-plane/`) and the TypeScript CLI (`cli/`).
 
 ## Read first
 
-1. `docs/CHAT_SESSION_SUMMARY.md` — history and decisions.
-2. `docs/plans/api_cli_et_ui_web.md` — archived API / UI plan.
-3. `docs/reshapr-WEB_UI.md` — auth architecture, CORS, MVP.
-4. `docs/reshapr-control-plane-CORS.md` — `application.properties` excerpt (reference only; live file lives in the reshapr repo).
-5. `docs/CURSOR_USER_RULES.md` — user / agent preferences (archive).
-6. `docs/ARCHITECTURE.md` — Vite env vars, Option B, session.
+1. [`CONTRIBUTING.md`](../CONTRIBUTING.md) — layout, stack, PR checklist
+2. [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — auth, env, MVP, UI shell / split theme
+3. [`docs/plans/api_cli_et_ui_web.md`](../docs/plans/api_cli_et_ui_web.md) — control-plane REST map
+4. [`docs/reshapr-WEB_UI.md`](../docs/reshapr-WEB_UI.md) — CORS, MVP product notes
+5. [`docs/reshapr-control-plane-CORS.md`](../docs/reshapr-control-plane-CORS.md) — Quarkus CORS excerpt
 
 ## Quick technical rules
 

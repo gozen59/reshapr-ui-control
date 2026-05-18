@@ -1,10 +1,10 @@
 ---
 description: SPA UI implementation and MCP JSON-RPC conventions
-globs: "src/**/*.{ts,tsx}"
+globs: "src/**/*.{ts,svelte}"
 alwaysApply: false
 ---
 
-# UI implementation (Vite React app)
+# UI implementation (SvelteKit SPA)
 
 When editing MCP-related pages or `src/lib/mcpJsonRpc.ts`:
 

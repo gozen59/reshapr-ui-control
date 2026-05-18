@@ -15,8 +15,6 @@ isProject: false
 source_plan_id: api_cli_et_ui_web_786aed26
 ---
 
-<!-- Archive of Cursor plan `api_cli_et_ui_web_786aed26.plan.md` (body matches the approved plan). -->
-
 # APIs consumed by the CLI and feasibility of a web UI
 
 ## CLI network scope
@@ -62,9 +60,9 @@ JAX-RS resources under `control-plane/src/main/java/io/reshapr/ctrl/rest/` — e
 3. **Hosting**: Option A (embedded) vs Option B (separate SPA, e.g. micepe / reshapr-ui-control).
 4. **CLI without API**: `reshapr run` stays CLI / ops.
 
-## Recommended next step (historical)
+## Implementation (reshapr-ui-control)
 
-Decide Option A vs B and session model (SPA Bearer vs BFF) — **already decided** for reshapr-ui-control: Option B + Bearer in `sessionStorage`, see `docs/ARCHITECTURE.md`.
+Option B + Bearer in `sessionStorage`. Details: [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md).
 
 ## Diagram (network flow)
 

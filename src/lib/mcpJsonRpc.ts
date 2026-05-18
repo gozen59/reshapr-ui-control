@@ -66,7 +66,7 @@ export async function listMcpPromptsFromUrl(mcpUrl: string): Promise<McpPromptsL
     params: {
       protocolVersion: MCP_PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: 'reshapr-ui-control', version: '1.0.0' },
+      clientInfo: { name: 'reShapr UI Control', version: '1.0.0' },
     },
   })
 

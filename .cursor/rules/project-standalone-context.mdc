@@ -5,11 +5,11 @@ alwaysApply: true
 
 # reshapr-ui-control
 
-This workspace is the **npm / Vite + React** web console for a Reshapr control plane (`npm run dev`, `src/`).
+This workspace is the **SvelteKit + Tailwind + shadcn-svelte** web console for a Reshapr control plane (`npm run dev`, `src/routes/`).
 
 ## Current scope
 
-- Control plane base URL: user-configurable at sign-in (see `VITE_RESHAPR_SERVER` in `docs/ARCHITECTURE.md`).
+- Control plane base URL: user-configurable at sign-in (see `PUBLIC_RESHAPR_SERVER` in `docs/ARCHITECTURE.md`).
 - Example MCP endpoint: `http://localhost:7777/mcp/reshapr/BlazeMeter+API/4`
 
 ## Functional goal
