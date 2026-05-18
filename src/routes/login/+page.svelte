@@ -6,9 +6,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { resolveControlPlaneBase } from '$lib/auth/controlPlaneUrl';
 	import { buildSaasLoginUrl, isSaasPortalUrl, normalizeServerUrl } from '$lib/auth/saas';
-	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
-	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Separator } from '$lib/components/ui/separator';
@@ -25,12 +23,10 @@
 	const isOnPremMode = $derived(auth.bootstrap?.mode === 'on-premises');
 	const likelySaasPortal = $derived(isSaasPortalUrl(portalUrl));
 
-	/** SaaS: OAuth via /cli/login (same as `reshapr login -s https://try.reshapr.io`). */
 	const showSaasSignIn = $derived(
 		auth.ready && portalUrl.length > 0 && (isSaasMode || (likelySaasPortal && !isOnPremMode))
 	);
 
-	/** On-prem: username/password on the control plane (local or dedicated URL). */
 	const showOnPremSignIn = $derived(
 		auth.ready &&
 			(isOnPremMode ||
@@ -112,19 +108,18 @@
 	}
 </script>
 
-<div class="flex min-h-screen items-center justify-center p-6">
-	<Card.Root class="w-full max-w-md">
-		<Card.Header class="space-y-4">
-			<AppBrand class="flex w-full justify-center" />
-			<Card.Title class="text-xl">Sign in</Card.Title>
-			<Card.Description>
-				Choose the control plane URL, then sign in with reShapr (SaaS) or with a local
-				username and password (on-premises).
-			</Card.Description>
-		</Card.Header>
-		<Card.Content class="space-y-5">
+<div class="flex flex-1 items-center justify-center p-6">
+	<div class="w-full max-w-md space-y-8 rounded-xl border bg-card p-8 shadow-lg">
+		<div class="text-center">
+			<AppBrand variant="login" />
+			<p class="mt-2 text-sm text-muted-foreground">
+				Sign in to manage your control plane — SaaS or on-premises
+			</p>
+		</div>
+
+		<div class="space-y-4">
 			<div class="space-y-2">
-				<Label for="server-url">Server URL</Label>
+				<Label for="server-url">Control plane URL</Label>
 				<Input
 					id="server-url"
 					value={auth.serverUrl}
@@ -136,42 +131,35 @@
 					autocomplete="url"
 				/>
 				<p class="text-muted-foreground text-xs">
-					SaaS portal: <code class="text-xs">https://try.reshapr.io</code> — local dev:
-					leave empty to proxy to <code class="text-xs">localhost:5555</code>.
+					SaaS: <code class="text-xs">https://try.reshapr.io</code> — local dev: leave empty for proxy to
+					<code class="text-xs">localhost:5555</code>.
 				</p>
 			</div>
 
 			{#if auth.ready && auth.bootstrap}
-				<p class="text-muted-foreground text-sm">
-					Mode <code class="text-xs">{auth.bootstrap.mode}</code> — version
+				<p class="text-muted-foreground text-center text-sm">
+					Mode <code class="text-xs">{auth.bootstrap.mode}</code> ·
 					<code class="text-xs">{auth.bootstrap.version}</code>
 				</p>
 			{/if}
 
 			{#if bootstrapWarning}
-				<Alert.Root>
-					<Alert.Title>Note</Alert.Title>
-					<Alert.Description>{bootstrapWarning}</Alert.Description>
-				</Alert.Root>
-			{/if}
-
-			{#if showSaasSignIn}
-				<div class="space-y-3">
-					<h2 class="text-sm font-medium">Sign in with reShapr (SaaS)</h2>
-					<p class="text-muted-foreground text-xs">
-						Opens the reShapr portal in this browser (same flow as
-						<code class="text-xs">reshapr login -s {portalUrl || '…'}</code>). After
-						success, API calls use the control plane URL returned by the platform (e.g.
-						<code class="text-xs">app.try.reshapr.io</code>).
-					</p>
-					<Button type="button" class="w-full" onclick={startSaasSignIn}>
-						Sign in with reShapr
-					</Button>
+				<div
+					class="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground"
+					role="status"
+				>
+					{bootstrapWarning}
 				</div>
 			{/if}
 
+			{#if showSaasSignIn}
+				<Button type="button" class="w-full" size="lg" onclick={startSaasSignIn}>
+					Sign in with reShapr
+				</Button>
+			{/if}
+
 			{#if showSaasSignIn && showOnPremSignIn}
-				<div class="relative">
+				<div class="relative py-1">
 					<Separator />
 					<span
 						class="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs"
@@ -182,8 +170,8 @@
 			{/if}
 
 			{#if showOnPremSignIn}
-				<form class="space-y-4" onsubmit={onSubmit}>
-					<h2 class="text-sm font-medium">Sign in to control plane (on-premises)</h2>
+				<form class="space-y-4 rounded-lg border bg-muted/50 p-4" onsubmit={onSubmit}>
+					<p class="text-sm font-medium">On-premises (username / password)</p>
 					<div class="space-y-2">
 						<Label for="username">Username</Label>
 						<Input id="username" bind:value={username} autocomplete="username" />
@@ -198,28 +186,31 @@
 						/>
 					</div>
 					<Button type="submit" class="w-full" disabled={loading}>
-						{loading ? 'Signing in…' : 'Sign in with username and password'}
+						{loading ? 'Signing in…' : 'Sign in'}
 					</Button>
 				</form>
 			{/if}
 
 			{#if auth.ready && !showSaasSignIn && !showOnPremSignIn && portalUrl}
-				<Alert.Root>
-					<Alert.Title>Unknown mode</Alert.Title>
-					<Alert.Description>
-						Could not determine how to sign in for this URL. Use
-						<code class="text-xs">https://try.reshapr.io</code> for SaaS or a local
-						control plane URL for on-premises.
-					</Alert.Description>
-				</Alert.Root>
+				<div class="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
+					Could not determine how to sign in for this URL. Use
+					<code class="text-xs">https://try.reshapr.io</code> for SaaS or a dedicated control plane URL for
+					on-premises.
+				</div>
 			{/if}
 
 			{#if error}
-				<Alert.Root variant="destructive">
-					<Alert.Title>Error</Alert.Title>
-					<Alert.Description>{error}</Alert.Description>
-				</Alert.Root>
+				<div
+					class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive"
+					role="alert"
+				>
+					{error}
+				</div>
 			{/if}
-		</Card.Content>
-	</Card.Root>
+		</div>
+
+		<p class="text-center text-xs text-muted-foreground">
+			Operator console for the Reshapr control plane APIs.
+		</p>
+	</div>
 </div>

@@ -22,7 +22,8 @@
 
 - **P0**: bootstrap on login, services, import / attach artifacts, plans, expositions (active list + all + create + detail + delete).
 - **P1**: secrets, gateway groups, quotas, API tokens.
-- **MCP**: custom tools (control-plane REST), prompts (JSON-RPC on MCP URL; CORS on MCP gateway).
+- **MCP**: custom tools (control-plane REST), prompts (control-plane `RESHAPR_PROMPTS` artifact).
+- **Theme**: OKLCH tokens aligned with [try.reshapr.io](https://try.reshapr.io) (teal primary, light shell); see `src/app.css`.
 
 ## UI shell and theme
 
