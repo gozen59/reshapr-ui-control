@@ -19,6 +19,12 @@ alwaysApply: true
 4. [`docs/reshapr-WEB_UI.md`](../docs/reshapr-WEB_UI.md) — CORS, MVP product notes
 5. [`docs/reshapr-control-plane-CORS.md`](../docs/reshapr-control-plane-CORS.md) — Quarkus CORS excerpt
 
+## Control plane boundary (mandatory)
+
+- **Never modify** the Reshapr control plane or the [reshapr](https://github.com/reshaprio/reshapr) backend (`control-plane/`, new Quarkus resources, new REST endpoints, etc.). This workspace is **UI-only**; the contributor does not ship backend changes from here.
+- If a feature needs an API that is **not** available on the control plane (or only under `/api/admin/*` without a tenant-safe `/api/v1/*` equivalent), **stop and tell the user** what is missing so they can request it from the Reshapr team. Do not implement backend workarounds on your own initiative.
+- In this repo, prefer: client-side aggregation from existing `/api/v1/*` calls, partial UI (`—` + short explanation), or patterns already supported (e.g. MCP prompts via control-plane artifacts). Optional: suggest an upstream issue/PR wording for the user to open on reshapr.
+
 ## Quick technical rules
 
 - On-prem auth: `POST /auth/login/reshapr` → token in `sessionStorage`; `Authorization: Bearer` on `/api/v1/*`.
