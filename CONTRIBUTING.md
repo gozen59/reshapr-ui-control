@@ -3,7 +3,7 @@
 ## Stack
 
 - **SvelteKit** — SPA (`adapter-static`, `ssr: false`), file-based routes in `src/routes/`
-- **Tailwind CSS v4** — `src/app.css`, design tokens for light main + dark shell
+- **Tailwind CSS v4** — `src/app.css` (OKLCH tokens aligned with [try.reshapr.io](https://try.reshapr.io))
 - **shadcn-svelte** — `src/lib/components/ui/`, add via `npx shadcn-svelte@latest add <name>`
 
 ## Prerequisites
@@ -26,21 +26,23 @@ Open the Vite URL (often `http://localhost:5173`). Leave the control plane URL e
 | Path | Role |
 |------|------|
 | `src/routes/` | Pages (`login`, `(app)/*`) |
-| `src/routes/(app)/+layout.svelte` | Shell: top banner, dark sidebar, light `<main>` |
+| `src/routes/(app)/+layout.svelte` | Shell: light header + sidebar + `<main>` (try.reshapr.io-style) |
 | `src/lib/api/client.ts` | REST client (paths aligned with the CLI) |
 | `src/lib/stores/auth.svelte.ts` | Session (`sessionStorage`) |
-| `src/lib/mcp*.ts` | MCP URL / custom tools / JSON-RPC prompts |
-| `src/lib/components/` | App components (`AppBrand`, `PageHeader`, …) |
+| `src/lib/mcp*.ts` | MCP URL / custom tools / prompts via control plane |
+| `src/lib/components/` | App components (`AppBrand`, `AppFooter`, `PageHeader`, …) |
 | `src/lib/components/ui/` | shadcn-svelte primitives |
-| `static/` | Favicon, logo (`reshapr-logo.png`) |
+| `static/` | Favicons, `reShapr-horizontal.png`, `reShapr-icon.png` |
 
 ## UI conventions
 
-- **Titles**: app name = `<h1>` in `AppBrand`; page titles = `<h2>` via `PageHeader`
-- **Theme**: banner + sidebar use local `.dark` + sidebar tokens; main content uses light `:root` tokens (see `docs/ARCHITECTURE.md`)
-- Reuse `PageHeader`, `ApiErrorAlert`, `JsonBlock` before adding patterns
-- Destructive actions: `window.confirm` or shadcn `AlertDialog`
-- No secrets in code, commits, or docs
+- **Language**: user-facing copy in **English**.
+- **Titles**: app name = `<h1>` in `AppBrand`; page titles = `<h2>` via `PageHeader`.
+- **Theme**: light shell everywhere (header `bg-card`, sidebar `bg-sidebar`); tokens in `src/app.css` — see `docs/ARCHITECTURE.md`.
+- Reuse `PageHeader`, `ApiErrorAlert`, `JsonBlock` before adding patterns.
+- Destructive actions: `window.confirm` or shadcn `AlertDialog`.
+- No secrets in code, commits, or docs.
+- **Control plane**: UI-only repo — do not patch reshapr backend; report missing APIs upstream.
 
 ## Scripts
 

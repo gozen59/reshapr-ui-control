@@ -2,10 +2,14 @@
 
 **Index**: see [`docs/README.md`](./README.md) for the full list of transferred documents (chat, plan, rules, WEB_UI, CORS).
 
-## Relationship to reshapr
+## Relationship to reshapr and try.reshapr.io
 
-- Quarkus control plane: **reshapr** repo (`control-plane/`, `cli/`).
-- Server-side CORS configuration: `RESHAPR_HTTP_CORS_ORIGINS` + `application.properties` (see reshapr `docs/WEB_UI.md`).
+| Repo | Role |
+|------|------|
+| [reshapr](https://github.com/reshaprio/reshapr) | Quarkus **control plane** + CLI — source of REST APIs used by this UI |
+| [try.reshapr.io](https://github.com/reshaprio/try.reshapr.io) (local: `GOZEN/TOOLS/try.reshapr.io`) | SaaS **portal** reference for look & feel (OKLCH theme, login card, footer, `AppBrand` typography) |
+
+This project is a **static SPA** (`adapter-static`, `ssr: false`). It does not embed try’s server stack (Auth.js, Drizzle, `adapter-node`). It calls an external control plane from the browser (or via the Vite dev proxy).
 
 ## Environment variables (Vite)
 
@@ -15,18 +19,26 @@
 
 ## Authentication
 
-- **On-premises**: `POST {server}/auth/login/reshapr` then store token + server URL in `sessionStorage`.
-- **SaaS**: CLI OAuth flow not reproduced here; message on the login screen.
+- **On-premises**: `POST {server}/auth/login/reshapr` → token + server URL in `sessionStorage`.
+- **SaaS**: redirect to the portal `/cli/login` (same flow as `reshapr login -s https://try.reshapr.io`), callback on `/login/callback` with `ctrl_url` for the tenant API.
+
+Server-side CORS on the control plane: `RESHAPR_HTTP_CORS_ORIGINS` (see [`docs/reshapr-control-plane-CORS.md`](./reshapr-control-plane-CORS.md)).
 
 ## MVP scope (implemented in navigation)
 
 - **P0**: bootstrap on login, services, import / attach artifacts, plans, expositions (active list + all + create + detail + delete).
 - **P1**: secrets, gateway groups, quotas, API tokens.
 - **MCP**: custom tools (control-plane REST), prompts (control-plane `RESHAPR_PROMPTS` artifact).
-- **Theme**: OKLCH tokens aligned with [try.reshapr.io](https://try.reshapr.io) (teal primary, light shell); see `src/app.css`.
+- **Dashboard**: home stats aggregated from existing `/api/v1/*` only (no control-plane patches).
 
-## UI shell and theme
+## UI shell and theme (aligned with try.reshapr.io)
 
-- **Layout**: top banner (app title + mode badge + server URL + Logout) + left sidebar (nav) + main content area.
-- **Theme**: split — banner and sidebar use a local `.dark` scope (`bg-sidebar`, sidebar tokens); main content uses light `:root` tokens (`bg-background`, shadcn components).
-- **Global**: no `class="dark"` on `<html>`; see `src/routes/(app)/+layout.svelte` and `src/app.css`.
+- **Root layout** (`src/routes/+layout.svelte`): full-height column, `bg-background`, global `AppFooter` (same pattern as try).
+- **App layout** (`src/routes/(app)/+layout.svelte`): light header (`bg-card`), light sidebar (`bg-sidebar` tokens), nav active state `bg-primary/10`, main content `max-w-6xl`.
+- **Theme** (`src/app.css`): OKLCH slate + teal primary — same token set as try; light shell by default (no split dark sidebar scope).
+- **Branding** (`AppBrand`): horizontal logo + **UI Control** in header; login variant matches try’s title + icon pattern.
+- **Login** (`src/routes/login/*`): centered `rounded-xl border bg-card p-8 shadow-lg` card.
+
+## Control plane boundary
+
+Do not add or modify Quarkus resources in reshapr from this repo. If a feature needs a missing `/api/v1/*` endpoint, document the gap for the reshapr team; use client-side aggregation or partial UI until upstream exposes an API.
