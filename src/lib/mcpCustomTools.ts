@@ -23,29 +23,13 @@ export type McpCustomToolsResolution = {
   source: 'artifacts_custom_tools' | 'services_operations'
   expoId: string
   serviceId: string
+  /** Full `RESHAPR_CUSTOM_TOOLS` artifact YAML when tools come from that artifact. */
+  artifactYaml?: string
 }
 
-export function parseMcpUrl(mcpUrl: string): {
-  orgId: string
-  serviceName: string
-  version: string
-  host: string
-} {
-  let u: URL
-  try {
-    u = new URL(mcpUrl)
-  } catch {
-    throw new Error('Invalid MCP URL')
-  }
-  const parts = u.pathname.split('/').filter(Boolean)
-  if (parts.length < 4 || String(parts[0]).toLowerCase() !== 'mcp') {
-    throw new Error('Expected MCP path: /mcp/{organization}/{service}/{version}')
-  }
-  const orgId = decodeURIComponent(parts[1].replace(/\+/g, '%20'))
-  const serviceName = decodeURIComponent(parts[2].replace(/\+/g, '%20'))
-  const version = decodeURIComponent(parts.slice(3).join('/').replace(/\+/g, '%20'))
-  return { orgId, serviceName, version, host: u.host }
-}
+import { parseMcpUrl } from './mcpUrl'
+
+export { parseMcpUrl } from './mcpUrl'
 
 function parseInputSchemaFromYamlBlock(block: string): { type: string; properties: Record<string, unknown> } {
   const m = block.match(/^    input:\s*\n([\s\S]+)/m)
@@ -278,6 +262,7 @@ export async function resolveMcpCustomToolsFromUrl(
       source: 'artifacts_custom_tools',
       expoId: expo.id,
       serviceId: service.id,
+      artifactYaml: yamlArtifact?.content ?? undefined,
     }
   }
   const view = (await client.getService(service.id)) as ServiceView

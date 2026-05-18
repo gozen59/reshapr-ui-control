@@ -1,13 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
+import { reshaprDevProxy } from './vite-plugin-reshapr-dev-proxy';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      '/api': { target: 'http://localhost:5555', changeOrigin: true },
-      '/auth': { target: 'http://localhost:5555', changeOrigin: true },
-    },
-  },
-})
+	plugins: [reshaprDevProxy(), tailwindcss(), sveltekit()]
+});
