@@ -2,6 +2,7 @@
 
 | Document | Contents |
 |----------|----------|
+| [MCP_SERVER_SETUP.md](./MCP_SERVER_SETUP.md) | Step-by-step: import, included operations, custom tools, prompts, verify |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Auth, env vars, MVP scope, UI shell, integration with reshapr |
 | [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) | Production CORS, reverse proxy, SaaS vs on-prem URLs |
 | [reshapr-WEB_UI.md](./reshapr-WEB_UI.md) | Product notes: Option B hosting, CORS, MVP (from reshapr `docs/WEB_UI.md`) |

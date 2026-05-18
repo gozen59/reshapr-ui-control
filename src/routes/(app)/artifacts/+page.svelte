@@ -41,13 +41,11 @@
 	let importSource = $state<'file' | 'url'>('file');
 	let genKeyImport = $state(false);
 
-	let attachCustomToolsOpen = $state(true);
+	let importExposeOpen = $state(true);
+	let importOnlyOpen = $state(false);
+	let attachCustomToolsOpen = $state(false);
 	let attachPromptsOpen = $state(false);
-	let importExposeOpen = $state(false);
-	let importFileOpen = $state(false);
-	let importUrlOpen = $state(false);
-	let attachFileOpen = $state(false);
-	let attachUrlOpen = $state(false);
+	let advancedAttachOpen = $state(false);
 	let specUrl = $state(DEFAULT_OPEN_METEO_URL);
 	let backendEndpointExpose = $state('');
 	let includedOperationsExpose = $state('');
@@ -304,31 +302,24 @@
 <PageHeader title="Artifacts" />
 
 <Alert.Root class="mb-4">
-	<Alert.Title>Typical BlazeMeter / OpenAPI flow</Alert.Title>
-	<Alert.Description class="space-y-1 text-sm">
+	<Alert.Title>MCP server creation (recommended order)</Alert.Title>
+	<Alert.Description class="space-y-2 text-sm">
 		<ol class="list-decimal space-y-1 pl-5">
-			<li><strong>Import</strong> the OpenAPI spec (import + exposition or import only).</li>
+			<li><strong>Import + expose</strong> — spec, backend URL, optional <code class="text-xs">--io</code>.</li>
+			<li><strong>Import only</strong> — if you split plan/exposition on <a href="/plans/new" class="text-primary hover:underline">Plans</a>.</li>
+			<li><strong>Custom tools</strong> — YAML <code class="text-xs">kind: CustomTools</code>.</li>
+			<li><strong>MCP prompts</strong> — YAML <code class="text-xs">kind: Prompts</code>.</li>
 			<li>
-				<strong>Plan</strong> — restrict operations with <code class="text-xs">--io</code> on import+expose or on
-				<a href="/plans/new" class="text-primary hover:underline">Plans → New plan</a>.
-			</li>
-			<li>
-				<strong>Custom tools / prompts</strong> — attach YAML <code class="text-xs">CustomTools</code> or
-				<code class="text-xs">Prompts</code> to the same service (<code class="text-xs">reshapr attach -f</code>,
-				sections below).
-			</li>
-			<li>
-				Verify on
-				<a href="/mcp-custom-tools" class="text-primary hover:underline">MCP custom tools</a> and
-				<a href="/mcp-prompts" class="text-primary hover:underline">MCP prompts</a> after exposing the plan.
+				<strong>Verify</strong> —
+				<a href="/mcp-custom-tools" class="text-primary hover:underline">MCP custom tools</a>,
+				<a href="/mcp-prompts" class="text-primary hover:underline">MCP prompts</a>.
 			</li>
 		</ol>
+		<p class="text-muted-foreground">
+			Full guide: <code class="text-xs">docs/MCP_SERVER_SETUP.md</code> in this repository.
+		</p>
 	</Alert.Description>
 </Alert.Root>
-
-<p class="text-muted-foreground mb-4 text-sm">
-	Import and attach — same contracts as the CLI. Each section is collapsible.
-</p>
 
 {#if err}
 	<ApiErrorAlert message={err} />
@@ -349,119 +340,15 @@
 	</Alert.Root>
 {/if}
 
-<Collapsible.Root bind:open={attachCustomToolsOpen} class="mb-4">
-	<Card.Root>
-		<Collapsible.Trigger class="w-full text-left">
-			<Card.Header>
-				<Card.Title class="text-base">Attach custom tools (YAML)</Card.Title>
-				<Card.Description>
-					Like <code class="text-xs">reshapr attach -f custom-tools.yaml</code> —
-					<code class="text-xs">POST /api/v1/artifacts/attach</code>. Document
-					<code class="text-xs">kind: CustomTools</code> (schema
-					<code class="text-xs">CustomTools-v1alpha1</code>) bound to an existing service. Example in the
-					<a
-						href="https://github.com/reshaprio/reshapr/blob/main/dev/github-api-custom-tools.yaml"
-						target="_blank"
-						rel="noreferrer"
-						class="text-primary hover:underline"
-					>reshapr repo</a>.
-				</Card.Description>
-			</Card.Header>
-		</Collapsible.Trigger>
-		<Collapsible.Content>
-			<Card.Content class="space-y-4">
-				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
-					<div class="min-w-[200px] flex-1 space-y-2">
-						<Label for="customToolsFile">Custom tools file</Label>
-						<Input id="customToolsFile" type="file" name="afile" accept=".yaml,.yml,.json" required />
-					</div>
-					<Button type="submit">Attach file</Button>
-				</form>
-				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
-					<div class="min-w-[200px] flex-1 space-y-2">
-						<Label for="customToolsUrl">Or URL</Label>
-						<Input id="customToolsUrl" name="aurl" placeholder="https://…" class="w-full" required />
-					</div>
-					<div class="space-y-2">
-						<Label for="customToolsSecret">Secret (optional)</Label>
-						<Input id="customToolsSecret" name="asecret" placeholder="secretName" />
-					</div>
-					<Button type="submit" variant="secondary">Attach URL</Button>
-				</form>
-			</Card.Content>
-		</Collapsible.Content>
-	</Card.Root>
-</Collapsible.Root>
-
-<Collapsible.Root bind:open={attachPromptsOpen} class="mb-4">
-	<Card.Root>
-		<Collapsible.Trigger class="w-full text-left">
-			<Card.Header>
-				<Card.Title class="text-base">Attach MCP prompts (YAML)</Card.Title>
-				<Card.Description>
-					Same endpoint as custom tools: <code class="text-xs">reshapr attach -f prompts.yaml</code> →
-					<code class="text-xs">POST /api/v1/artifacts/attach</code>. Document
-					<code class="text-xs">kind: Prompts</code> (<code class="text-xs">Prompts-v1alpha1</code>) with
-					<code class="text-xs">service.name</code> / <code class="text-xs">service.version</code> matching the
-					imported service. Example:
-					<a
-						href="https://github.com/reshaprio/reshapr/blob/main/dev/apipastry-prompts.yaml"
-						target="_blank"
-						rel="noreferrer"
-						class="text-primary hover:underline"
-					>apipastry-prompts.yaml</a>.
-				</Card.Description>
-			</Card.Header>
-		</Collapsible.Trigger>
-		<Collapsible.Content>
-			<Card.Content class="space-y-4">
-				<p class="text-muted-foreground text-xs">
-					Minimal shape: <code class="text-xs">apiVersion: reshapr.io/v1alpha1</code>,
-					<code class="text-xs">kind: Prompts</code>, <code class="text-xs">service</code>,
-					<code class="text-xs">prompts:</code> map of prompt definitions. Then list them on
-					<a href="/mcp-prompts" class="text-primary hover:underline">MCP prompts</a> via
-					<code class="text-xs">prompts/list</code> on the exposition URL.
-				</p>
-				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
-					<div class="min-w-[200px] flex-1 space-y-2">
-						<Label for="promptsFile">Prompts file</Label>
-						<Input id="promptsFile" type="file" name="afile" accept=".yaml,.yml" required />
-					</div>
-					<Button type="submit">Attach file</Button>
-				</form>
-				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
-					<div class="min-w-[200px] flex-1 space-y-2">
-						<Label for="promptsUrl">Or URL</Label>
-						<Input id="promptsUrl" name="aurl" placeholder="https://…" class="w-full" required />
-					</div>
-					<div class="space-y-2">
-						<Label for="promptsSecret">Secret (optional)</Label>
-						<Input id="promptsSecret" name="asecret" placeholder="secretName" />
-					</div>
-					<Button type="submit" variant="secondary">Attach URL</Button>
-				</form>
-			</Card.Content>
-		</Collapsible.Content>
-	</Card.Root>
-</Collapsible.Root>
-
 <Collapsible.Root bind:open={importExposeOpen} class="mb-4">
 	<Card.Root>
 		<Collapsible.Trigger class="w-full text-left">
 			<Card.Header>
-				<Card.Title class="text-base">Import + exposition (--backendEndpoint)</Card.Title>
+				<Card.Title class="text-base">1. Import + expose (spec, plan, exposition)</Card.Title>
 				<Card.Description>
-					Like <code class="text-xs">reshapr import -f|-u … --backendEndpoint …</code> (
-					<a
-						href="https://github.com/reshaprio/reshapr/blob/main/cli/src/commands/import.ts"
-						target="_blank"
-						rel="noreferrer"
-						class="text-primary hover:underline"
-					>
-						import.ts
-					</a>
-					): <code class="text-xs">POST /api/v1/artifacts</code> then plan + exposition —
-					<a href="/gateway-groups" class="text-primary hover:underline">Gateway groups</a>.
+					Like <code class="text-xs">reshapr import -f|-u … --backendEndpoint …</code> then plan + exposition.
+					Optional <code class="text-xs">--io</code> below. Needs a
+					<a href="/gateway-groups" class="text-primary hover:underline">gateway group</a>.
 				</Card.Description>
 			</Card.Header>
 		</Collapsible.Trigger>
@@ -478,7 +365,7 @@
 									checked={importSource === 'file'}
 									onchange={() => (importSource = 'file')}
 								/>
-								File (<code class="text-xs">-f</code> / <code class="text-xs">--file</code>)
+								File (<code class="text-xs">-f</code>)
 							</label>
 							<label class="flex items-center gap-2 text-sm">
 								<input
@@ -487,7 +374,7 @@
 									checked={importSource === 'url'}
 									onchange={() => (importSource = 'url')}
 								/>
-								URL (<code class="text-xs">-u</code> / <code class="text-xs">--url</code>)
+								URL (<code class="text-xs">-u</code>)
 							</label>
 						</div>
 					</div>
@@ -499,7 +386,7 @@
 						</div>
 					{:else}
 						<div class="space-y-2">
-							<Label for="specUrl">Specification URL (-u / --url)</Label>
+							<Label for="specUrl">Specification URL</Label>
 							<Input
 								id="specUrl"
 								name="specUrl"
@@ -557,7 +444,7 @@
 					</div>
 					<div class="flex items-center gap-2">
 						<Checkbox id="apiKeyIs" bind:checked={genKeyImport} />
-						<Label for="apiKeyIs">Generate an API key on the plan (<code class="text-xs">--apiKey</code>)</Label>
+						<Label for="apiKeyIs">Generate an API key on the plan</Label>
 					</div>
 					<Button type="submit">Import and expose</Button>
 				</form>
@@ -566,79 +453,161 @@
 	</Card.Root>
 </Collapsible.Root>
 
-<Collapsible.Root bind:open={importFileOpen} class="mb-4">
+<Collapsible.Root bind:open={importOnlyOpen} class="mb-4">
 	<Card.Root>
 		<Collapsible.Trigger class="w-full text-left">
 			<Card.Header>
-				<Card.Title class="text-base">Import a file</Card.Title>
-				<Card.Description>POST /api/v1/artifacts (multipart), no plan or exposition.</Card.Description>
+				<Card.Title class="text-base">2. Import specification only (split workflow)</Card.Title>
+				<Card.Description>
+					<code class="text-xs">POST /api/v1/artifacts</code> without plan or exposition — then
+					<a href="/plans/new" class="text-primary hover:underline">create a plan</a> with
+					<code class="text-xs">--io</code> and an exposition.
+				</Card.Description>
 			</Card.Header>
 		</Collapsible.Trigger>
 		<Collapsible.Content>
-			<Card.Content>
+			<Card.Content class="space-y-6">
 				<form class="flex flex-wrap items-end gap-3" onsubmit={onImportFile}>
 					<Input type="file" name="file" required />
 					<Input name="serviceName" placeholder="serviceName (GraphQL)" />
 					<Input name="serviceVersion" placeholder="serviceVersion" />
-					<Button type="submit">Import</Button>
+					<Button type="submit" variant="secondary">Import file</Button>
 				</form>
-			</Card.Content>
-		</Collapsible.Content>
-	</Card.Root>
-</Collapsible.Root>
-
-<Collapsible.Root bind:open={importUrlOpen} class="mb-4">
-	<Card.Root>
-		<Collapsible.Trigger class="w-full text-left">
-			<Card.Header>
-				<Card.Title class="text-base">Import from URL</Card.Title>
-				<Card.Description>POST /api/v1/artifacts (application/x-www-form-urlencoded).</Card.Description>
-			</Card.Header>
-		</Collapsible.Trigger>
-		<Collapsible.Content>
-			<Card.Content>
-				<form class="flex flex-wrap items-end gap-3" onsubmit={onImportUrl}>
+				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onImportUrl}>
 					<Input name="url" placeholder="https://…" class="min-w-[200px] flex-1" required />
 					<Input name="secretName" placeholder="secretName (optional)" />
 					<Input name="serviceName" placeholder="serviceName" />
 					<Input name="serviceVersion" placeholder="serviceVersion" />
-					<Button type="submit">Import URL</Button>
+					<Button type="submit" variant="secondary">Import URL</Button>
 				</form>
 			</Card.Content>
 		</Collapsible.Content>
 	</Card.Root>
 </Collapsible.Root>
 
-<Collapsible.Root bind:open={attachFileOpen} class="mb-4">
+<Collapsible.Root bind:open={attachCustomToolsOpen} class="mb-4">
 	<Card.Root>
 		<Collapsible.Trigger class="w-full text-left">
 			<Card.Header>
-				<Card.Title class="text-base">Attach a file (generic)</Card.Title>
-				<Card.Description>POST /api/v1/artifacts/attach — any artifact type (see Custom tools section above).</Card.Description>
+				<Card.Title class="text-base">3. Attach custom tools (YAML)</Card.Title>
+				<Card.Description>
+					Like <code class="text-xs">reshapr attach -f custom-tools.yaml</code> —
+					<code class="text-xs">POST /api/v1/artifacts/attach</code>. Document
+					<code class="text-xs">kind: CustomTools</code> (schema
+					<code class="text-xs">CustomTools-v1alpha1</code>) bound to an existing service. Example in the
+					<a
+						href="https://github.com/reshaprio/reshapr/blob/main/dev/github-api-custom-tools.yaml"
+						target="_blank"
+						rel="noreferrer"
+						class="text-primary hover:underline"
+					>reshapr repo</a>.
+				</Card.Description>
 			</Card.Header>
 		</Collapsible.Trigger>
 		<Collapsible.Content>
-			<Card.Content>
+			<Card.Content class="space-y-4">
+				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="customToolsFile">Custom tools file</Label>
+						<Input id="customToolsFile" type="file" name="afile" accept=".yaml,.yml,.json" required />
+					</div>
+					<Button type="submit">Attach file</Button>
+				</form>
+				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="customToolsUrl">Or URL</Label>
+						<Input id="customToolsUrl" name="aurl" placeholder="https://…" class="w-full" required />
+					</div>
+					<div class="space-y-2">
+						<Label for="customToolsSecret">Secret (optional)</Label>
+						<Input id="customToolsSecret" name="asecret" placeholder="secretName" />
+					</div>
+					<Button type="submit" variant="secondary">Attach URL</Button>
+				</form>
+			</Card.Content>
+		</Collapsible.Content>
+	</Card.Root>
+</Collapsible.Root>
+
+<Collapsible.Root bind:open={attachPromptsOpen} class="mb-4">
+	<Card.Root>
+		<Collapsible.Trigger class="w-full text-left">
+			<Card.Header>
+				<Card.Title class="text-base">4. Attach MCP prompts (YAML)</Card.Title>
+				<Card.Description>
+					Same endpoint as custom tools: <code class="text-xs">reshapr attach -f prompts.yaml</code> →
+					<code class="text-xs">POST /api/v1/artifacts/attach</code>. Document
+					<code class="text-xs">kind: Prompts</code> (<code class="text-xs">Prompts-v1alpha1</code>) with
+					<code class="text-xs">service.name</code> / <code class="text-xs">service.version</code> matching the
+					imported service. Example:
+					<a
+						href="https://github.com/reshaprio/reshapr/blob/main/dev/apipastry-prompts.yaml"
+						target="_blank"
+						rel="noreferrer"
+						class="text-primary hover:underline"
+					>apipastry-prompts.yaml</a>.
+				</Card.Description>
+			</Card.Header>
+		</Collapsible.Trigger>
+		<Collapsible.Content>
+			<Card.Content class="space-y-4">
+				<p class="text-muted-foreground text-xs">
+					Minimal shape: <code class="text-xs">apiVersion: reshapr.io/v1alpha1</code>,
+					<code class="text-xs">kind: Prompts</code>, <code class="text-xs">service</code>,
+					<code class="text-xs">prompts:</code> map of prompt definitions. Verify on <a href="/mcp-prompts" class="text-primary hover:underline">MCP prompts</a> (control-plane artifact, no CORS).
+				</p>
+				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="promptsFile">Prompts file</Label>
+						<Input id="promptsFile" type="file" name="afile" accept=".yaml,.yml" required />
+					</div>
+					<Button type="submit">Attach file</Button>
+				</form>
+				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
+					<div class="min-w-[200px] flex-1 space-y-2">
+						<Label for="promptsUrl">Or URL</Label>
+						<Input id="promptsUrl" name="aurl" placeholder="https://…" class="w-full" required />
+					</div>
+					<div class="space-y-2">
+						<Label for="promptsSecret">Secret (optional)</Label>
+						<Input id="promptsSecret" name="asecret" placeholder="secretName" />
+					</div>
+					<Button type="submit" variant="secondary">Attach URL</Button>
+				</form>
+			</Card.Content>
+		</Collapsible.Content>
+	</Card.Root>
+</Collapsible.Root>
+
+<Card.Root class="mb-4">
+	<Card.Header>
+		<Card.Title class="text-base">5. Verify MCP</Card.Title>
+		<Card.Description>After steps 1–4, confirm tools and prompts on the exposition.</Card.Description>
+	</Card.Header>
+	<Card.Content class="flex flex-wrap gap-2">
+		<Button variant="outline" href="/services">Services</Button>
+		<Button variant="outline" href="/plans">Plans</Button>
+		<Button variant="outline" href="/expositions">Expositions</Button>
+		<Button variant="outline" href="/mcp-custom-tools">MCP custom tools</Button>
+		<Button variant="outline" href="/mcp-prompts">MCP prompts</Button>
+	</Card.Content>
+</Card.Root>
+
+<Collapsible.Root bind:open={advancedAttachOpen} class="mb-4">
+	<Card.Root>
+		<Collapsible.Trigger class="w-full text-left">
+			<Card.Header>
+				<Card.Title class="text-base">Advanced — generic attach</Card.Title>
+				<Card.Description>POST /api/v1/artifacts/attach for any artifact type (file or URL).</Card.Description>
+			</Card.Header>
+		</Collapsible.Trigger>
+		<Collapsible.Content>
+			<Card.Content class="space-y-4">
 				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachFile}>
 					<Input type="file" name="afile" required />
-					<Button type="submit" variant="secondary">Attach</Button>
+					<Button type="submit" variant="secondary">Attach file</Button>
 				</form>
-			</Card.Content>
-		</Collapsible.Content>
-	</Card.Root>
-</Collapsible.Root>
-
-<Collapsible.Root bind:open={attachUrlOpen} class="mb-4">
-	<Card.Root>
-		<Collapsible.Trigger class="w-full text-left">
-			<Card.Header>
-				<Card.Title class="text-base">Attach from URL</Card.Title>
-				<Card.Description>POST /api/v1/artifacts/attach (url + optional secret).</Card.Description>
-			</Card.Header>
-		</Collapsible.Trigger>
-		<Collapsible.Content>
-			<Card.Content>
-				<form class="flex flex-wrap items-end gap-3" onsubmit={onAttachUrl}>
+				<form class="flex flex-wrap items-end gap-3 border-t pt-4" onsubmit={onAttachUrl}>
 					<Input name="aurl" placeholder="https://…" class="min-w-[200px] flex-1" required />
 					<Input name="asecret" placeholder="secretName (optional)" />
 					<Button type="submit" variant="secondary">Attach URL</Button>
