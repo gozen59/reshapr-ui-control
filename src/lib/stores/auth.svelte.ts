@@ -1,4 +1,6 @@
 import { browser } from '$app/environment';
+import { resolveControlPlaneBase } from '$lib/auth/controlPlaneUrl';
+import { normalizeServerUrl } from '$lib/auth/saas';
 import {
 	clearSession,
 	fetchBootstrap,
@@ -6,6 +8,7 @@ import {
 	getStoredToken,
 	loginReshapr,
 	persistSession,
+	STORAGE_KEY_SAAS_PORTAL,
 	STORAGE_KEY_SERVER
 } from '$lib/api/client';
 
@@ -16,28 +19,57 @@ class AuthStore {
 	token = $state<string | null>(browser ? getStoredToken() : null);
 	bootstrap = $state<Bootstrap | null>(null);
 	ready = $state(false);
+	/** Portal URL used to start SaaS OAuth (e.g. https://try.reshapr.io). */
+	saasPortalUrl = $state('');
 
 	setServerUrl(u: string) {
-		const v = u.replace(/\/$/, '');
+		const v = u.trim().replace(/\/$/, '');
 		this.serverUrl = v;
-		if (browser) sessionStorage.setItem(STORAGE_KEY_SERVER, v);
+		if (!browser) return;
+		const resolved = resolveControlPlaneBase(v);
+		if (resolved !== null) {
+			sessionStorage.setItem(STORAGE_KEY_SERVER, resolved);
+		}
 	}
 
 	async refreshBootstrap() {
-		const b = await fetchBootstrap(this.serverUrl);
+		const resolved = resolveControlPlaneBase(this.serverUrl);
+		if (resolved === null) return;
+		const b = await fetchBootstrap(resolved);
 		this.bootstrap = b;
 		this.ready = true;
 	}
 
 	async login(username: string, password: string) {
-		const t = await loginReshapr(this.serverUrl, username, password);
-		persistSession(this.serverUrl, t);
+		const base = resolveControlPlaneBase(this.serverUrl);
+		if (!base) throw new Error('Enter a valid control plane URL before signing in.');
+		const t = await loginReshapr(base, username, password);
+		persistSession(base, t);
+		this.serverUrl = base;
 		this.token = t;
+	}
+
+	/** After SaaS redirect: API base is `ctrl_url`, not the portal URL (see CLI login.ts). */
+	completeSaasLogin(token: string, ctrlUrl: string | null, portalUrl: string) {
+		const apiBase = ctrlUrl ? resolveControlPlaneBase(ctrlUrl) : null;
+		if (!apiBase) {
+			throw new Error(
+				'Missing or invalid control plane URL (ctrl_url) from reShapr. Try signing in again.'
+			);
+		}
+		const portal = normalizeServerUrl(portalUrl);
+		persistSession(apiBase, token);
+		if (browser) sessionStorage.setItem(STORAGE_KEY_SAAS_PORTAL, portal);
+		this.serverUrl = apiBase;
+		this.token = token;
+		this.saasPortalUrl = portal;
 	}
 
 	logout() {
 		clearSession();
 		this.token = null;
+		this.bootstrap = null;
+		this.ready = false;
 	}
 }
 

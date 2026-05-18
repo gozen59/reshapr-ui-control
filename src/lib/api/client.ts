@@ -1,18 +1,27 @@
 import { browser } from '$app/environment';
 import { env } from '$env/dynamic/public';
+import { apiUrl, devProxyHeaders, resolveControlPlaneBase } from '$lib/auth/controlPlaneUrl';
 import { ApiError } from './errors';
 
 export { ApiError } from './errors';
 
 export const STORAGE_KEY_SERVER = 'reshapr-ui-control.serverUrl';
 export const STORAGE_KEY_TOKEN = 'reshapr-ui-control.token';
+export const STORAGE_KEY_SAAS_PORTAL = 'reshapr-ui-control.saasPortal';
 
 export function getStoredServerUrl(): string {
 	if (!browser) return '';
 	const stored = sessionStorage.getItem(STORAGE_KEY_SERVER);
-	if (stored !== null) return stored.replace(/\/$/, '');
-	const fromEnv = env.PUBLIC_RESHAPR_SERVER?.replace(/\/$/, '');
-	if (fromEnv) return fromEnv;
+	if (stored !== null) {
+		const resolved = resolveControlPlaneBase(stored);
+		if (resolved !== null) return resolved;
+		sessionStorage.removeItem(STORAGE_KEY_SERVER);
+	}
+	const fromEnv = env.PUBLIC_RESHAPR_SERVER?.trim();
+	if (fromEnv) {
+		const resolved = resolveControlPlaneBase(fromEnv);
+		if (resolved) return resolved;
+	}
 	if (import.meta.env.DEV) return '';
 	return 'http://localhost:5555';
 }
@@ -23,13 +32,18 @@ export function getStoredToken(): string | null {
 }
 
 export function persistSession(serverUrl: string, token: string) {
-	sessionStorage.setItem(STORAGE_KEY_SERVER, serverUrl.replace(/\/$/, ''));
+	const resolved = resolveControlPlaneBase(serverUrl);
+	if (!resolved) {
+		throw new ApiError('Invalid control plane URL', 400);
+	}
+	sessionStorage.setItem(STORAGE_KEY_SERVER, resolved);
 	sessionStorage.setItem(STORAGE_KEY_TOKEN, token);
 }
 
 export function clearSession() {
 	sessionStorage.removeItem(STORAGE_KEY_SERVER);
 	sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+	sessionStorage.removeItem(STORAGE_KEY_SAAS_PORTAL);
 }
 
 async function parseErrorBody(res: Response): Promise<string> {
@@ -37,9 +51,18 @@ async function parseErrorBody(res: Response): Promise<string> {
 	return t || res.statusText;
 }
 
+function mergeHeaders(base: string, init?: RequestInit): Headers {
+	const h = new Headers(init?.headers);
+	for (const [k, v] of Object.entries(devProxyHeaders(base))) {
+		h.set(k, v);
+	}
+	return h;
+}
+
 export async function fetchBootstrap(serverUrl: string) {
-	const base = serverUrl.replace(/\/$/, '');
-	const res = await fetch(`${base}/api/config`);
+	const res = await fetch(apiUrl(serverUrl, '/api/config'), {
+		headers: mergeHeaders(serverUrl)
+	});
 	if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
 	return res.json() as Promise<{
 		mode: string;
@@ -49,10 +72,11 @@ export async function fetchBootstrap(serverUrl: string) {
 }
 
 export async function loginReshapr(serverUrl: string, username: string, password: string) {
-	const base = serverUrl.replace(/\/$/, '');
-	const res = await fetch(`${base}/auth/login/reshapr`, {
+	const res = await fetch(apiUrl(serverUrl, '/auth/login/reshapr'), {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		headers: mergeHeaders(serverUrl, {
+			headers: { 'Content-Type': 'application/json' }
+		}),
 		body: JSON.stringify({ username, password })
 	});
 	if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
@@ -60,22 +84,30 @@ export async function loginReshapr(serverUrl: string, username: string, password
 }
 
 export function apiClient() {
-	const base = getStoredServerUrl().replace(/\/$/, '');
+	const base = getStoredServerUrl();
 	const token = getStoredToken();
 	if (!token) throw new ApiError('Not authenticated', 401);
+	if (base !== '' && resolveControlPlaneBase(base) === null) {
+		throw new ApiError(
+			'Invalid control plane URL in session. Sign out and sign in again with a full URL (e.g. https://app.try.reshapr.io).',
+			400
+		);
+	}
 
 	const authHeaders = (): HeadersInit => ({
 		Authorization: `Bearer ${token}`
 	});
 
+	const apiHeaders = (init?: RequestInit): Headers => {
+		const headers = mergeHeaders(base, init);
+		for (const [k, v] of Object.entries(authHeaders())) {
+			headers.set(k, v as string);
+		}
+		return headers;
+	};
+
 	const json = async <T>(path: string, init?: RequestInit): Promise<T> => {
-		const res = await fetch(`${base}${path}`, {
-			...init,
-			headers: {
-				...authHeaders(),
-				...(init?.headers as Record<string, string> | undefined)
-			}
-		});
+		const res = await fetch(apiUrl(base, path), { ...init, headers: apiHeaders(init) });
 		if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
 		if (res.status === 204) return undefined as T;
 		const ct = res.headers.get('content-type');
@@ -84,13 +116,7 @@ export function apiClient() {
 	};
 
 	const empty = async (path: string, init?: RequestInit) => {
-		const res = await fetch(`${base}${path}`, {
-			...init,
-			headers: {
-				...authHeaders(),
-				...(init?.headers as Record<string, string> | undefined)
-			}
-		});
+		const res = await fetch(apiUrl(base, path), { ...init, headers: apiHeaders(init) });
 		if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
 	};
 
@@ -111,9 +137,9 @@ export function apiClient() {
 			fd.append('mainArtifact', 'true');
 			if (extra?.serviceName) fd.append('serviceName', extra.serviceName);
 			if (extra?.serviceVersion) fd.append('serviceVersion', extra.serviceVersion);
-			const res = await fetch(`${base}/api/v1/artifacts`, {
+			const res = await fetch(apiUrl(base, '/api/v1/artifacts'), {
 				method: 'POST',
-				headers: authHeaders(),
+				headers: apiHeaders(),
 				body: fd
 			});
 			if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
@@ -121,12 +147,9 @@ export function apiClient() {
 		},
 
 		importArtifactUrl: async (params: URLSearchParams) => {
-			const res = await fetch(`${base}/api/v1/artifacts`, {
+			const res = await fetch(apiUrl(base, '/api/v1/artifacts'), {
 				method: 'POST',
-				headers: {
-					...authHeaders(),
-					'Content-Type': 'application/x-www-form-urlencoded'
-				},
+				headers: apiHeaders({ headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
 				body: params.toString()
 			});
 			if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
@@ -136,9 +159,9 @@ export function apiClient() {
 		attachArtifactFile: async (file: File) => {
 			const fd = new FormData();
 			fd.append('file', file);
-			const res = await fetch(`${base}/api/v1/artifacts/attach`, {
+			const res = await fetch(apiUrl(base, '/api/v1/artifacts/attach'), {
 				method: 'POST',
-				headers: authHeaders(),
+				headers: apiHeaders(),
 				body: fd
 			});
 			if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
@@ -149,12 +172,9 @@ export function apiClient() {
 			const p = new URLSearchParams();
 			p.set('url', url);
 			if (secretName) p.set('secretName', secretName);
-			const res = await fetch(`${base}/api/v1/artifacts/attach`, {
+			const res = await fetch(apiUrl(base, '/api/v1/artifacts/attach'), {
 				method: 'POST',
-				headers: {
-					...authHeaders(),
-					'Content-Type': 'application/x-www-form-urlencoded'
-				},
+				headers: apiHeaders({ headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
 				body: p.toString()
 			});
 			if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
@@ -188,8 +208,8 @@ export function apiClient() {
 		getExposition: (id: string) => json<unknown>(`/api/v1/expositions/${id}`),
 		getActiveExposition: (id: string) => json<unknown>(`/api/v1/expositions/active/${id}`),
 		getActiveExpositionOrNull: async (id: string): Promise<unknown | null> => {
-			const res = await fetch(`${base}/api/v1/expositions/active/${id}`, {
-				headers: authHeaders()
+			const res = await fetch(apiUrl(base, `/api/v1/expositions/active/${id}`), {
+				headers: apiHeaders()
 			});
 			if (res.status === 404) return null;
 			if (!res.ok) throw new ApiError(await parseErrorBody(res), res.status);
