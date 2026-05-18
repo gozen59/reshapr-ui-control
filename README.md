@@ -1,13 +1,13 @@
-# reshapr-ui-control
+# reShapr UI Control
 
-**Purpose:** this project exists to provide a **web UI** for [Reshapr](https://github.com/reshaprio/reshapr) — a browser-based console for the control plane that complements the **Reshapr CLI** from the same GitHub repository, without replacing it (same REST surface, different workflows).
+**Purpose:** web UI overlay for [reShapr](https://reshapr.io/) — a browser console for the control plane (same REST surface as the CLI).
 
-Web console (SPA) for the **Reshapr control plane**: same REST endpoints as the CLI (`/api/config`, `/auth/login/reshapr`, `/api/v1/...`). La page **MCP custom tools** (`/mcp-custom-tools`) résout les outils déclarés dans l’artifact `RESHAPR_CUSTOM_TOOLS` à partir d’une URL MCP, comme le ferait une inspection alignée sur le control-plane.
+**Stack:** SvelteKit (SPA) · Tailwind CSS · [shadcn-svelte](https://www.shadcn-svelte.com/)
 
 ## Prerequisites
 
 - Reshapr control plane reachable (e.g. `http://localhost:5555`).
-- CORS: on the Quarkus server, set `RESHAPR_HTTP_CORS_ORIGINS` to include this app’s origin (e.g. `http://localhost:5173`). See the **reshapr** repo (`docs/WEB_UI.md`, `application.properties`).
+- CORS: set `RESHAPR_HTTP_CORS_ORIGINS` on the Quarkus server to include this app’s origin (e.g. `http://localhost:5173`). See the **reshapr** repo (`docs/WEB_UI.md`).
 
 ## Getting started
 
@@ -19,20 +19,28 @@ npm run dev
 
 Open the URL printed by Vite (often `http://localhost:5173`), enter the control plane URL, then **on-premises** credentials (`POST /auth/login/reshapr`).
 
-**SaaS** mode does not implement the browser OAuth flow; use the `reshapr login` CLI or extend this app.
+In development, leave the URL empty to use the Vite proxy (`/api`, `/auth` → `localhost:5555`).
+
+**SaaS** mode does not implement browser OAuth; use the `reshapr login` CLI.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Dev server |
+| `npm run build` | Static production build (`build/`) |
+| `npm run preview` | Preview production build |
+| `npm run check` | Typecheck (svelte-check) |
+| `npm run test` | Unit tests (Vitest) |
+
+## Environment
+
+| Variable | Role |
+|----------|------|
+| `PUBLIC_RESHAPR_SERVER` | Default control plane URL (optional; user can override at sign-in) |
 
 ## Documentation
 
-- **Index**: [`docs/README.md`](./docs/README.md) — chat export, Cursor plan, user rules, `WEB_UI` copy, CORS, etc.
-- [`PLAN.md`](./PLAN.md) — API plan / UI feasibility summary.
-- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — **reshapr** integration and environment variables.
-- Cursor agent rules: [`.cursor/rules/reshapr-ui-control.mdc`](./.cursor/rules/reshapr-ui-control.mdc).
-
-## Production build
-
-```bash
-npm run build
-npm run preview
-```
-
-Static assets are in `dist/`.
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — setup, layout, conventions, PR checklist
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — auth, env, UI shell, MVP scope
+- [`docs/README.md`](./docs/README.md) — full doc index

@@ -1,13 +1,13 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  server: {
-    proxy: {
-      '/api': { target: 'http://localhost:5555', changeOrigin: true },
-      '/auth': { target: 'http://localhost:5555', changeOrigin: true },
-    },
-  },
-})
+	plugins: [tailwindcss(), sveltekit()],
+	server: {
+		proxy: {
+			'/api': { target: 'http://localhost:5555', changeOrigin: true },
+			'/auth': { target: 'http://localhost:5555', changeOrigin: true }
+		}
+	}
+});

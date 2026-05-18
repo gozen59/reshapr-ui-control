@@ -1,4 +1,4 @@
-# reshapr-ui-control architecture
+# reShapr UI Control — architecture
 
 **Index**: see [`docs/README.md`](./README.md) for the full list of transferred documents (chat, plan, rules, WEB_UI, CORS).
 
@@ -11,7 +11,7 @@
 
 | Variable | Role |
 |----------|------|
-| `VITE_RESHAPR_SERVER` | Default control plane URL in the UI (e.g. `http://localhost:5555`). The user can change it before signing in. |
+| `PUBLIC_RESHAPR_SERVER` | Default control plane URL in the UI (e.g. `http://localhost:5555`). The user can change it before signing in. In dev, if unset, the Vite proxy serves `/api` and `/auth`. |
 
 ## Authentication
 
@@ -22,3 +22,10 @@
 
 - **P0**: bootstrap on login, services, import / attach artifacts, plans, expositions (active list + all + create + detail + delete).
 - **P1**: secrets, gateway groups, quotas, API tokens.
+- **MCP**: custom tools (control-plane REST), prompts (JSON-RPC on MCP URL; CORS on MCP gateway).
+
+## UI shell and theme
+
+- **Layout**: top banner (app title + mode badge + server URL + Logout) + left sidebar (nav) + main content area.
+- **Theme**: split — banner and sidebar use a local `.dark` scope (`bg-sidebar`, sidebar tokens); main content uses light `:root` tokens (`bg-background`, shadcn components).
+- **Global**: no `class="dark"` on `<html>`; see `src/routes/(app)/+layout.svelte` and `src/app.css`.

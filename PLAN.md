@@ -33,7 +33,7 @@ Yes: reuse the same JSON APIs. Watch points: auth (on-prem vs SaaS), CORS (`RESH
 
 ## reshapr-ui-control repo
 
-- Vite + React + TypeScript SPA, **Option B** (origin separate from the control plane).
+- SvelteKit (SPA, `adapter-static`) + Tailwind CSS + shadcn-svelte, **Option B** (origin separate from the control plane).
 - MVP auth: Bearer in `sessionStorage`, aligned with on-prem CLI.
 - See `docs/ARCHITECTURE.md` for CORS and MVP scope screen by screen.
-- **Context handoff**: all material (chat summary, full Cursor plan, rules, WEB_UI copy, CORS) is indexed in [`docs/README.md`](./docs/README.md).
+- See [`docs/README.md`](./docs/README.md) for architecture, CORS, and API reference docs.
