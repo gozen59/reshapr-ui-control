@@ -11,6 +11,7 @@
 	let { children } = $props();
 
 	const nav = [
+		{ href: '/', label: 'Dashboard' },
 		{ href: '/services', label: 'Services' },
 		{ href: '/artifacts', label: 'Artifacts' },
 		{ href: '/plans', label: 'Plans' },
@@ -26,9 +27,11 @@
 	function navClass(href: string): string {
 		const path = page.url.pathname;
 		const active =
-			path === href ||
-			path.startsWith(href + '/') ||
-			(href === '/plans' && path.startsWith('/plans'));
+			href === '/'
+				? path === '/'
+				: path === href ||
+					path.startsWith(href + '/') ||
+					(href === '/plans' && path.startsWith('/plans'));
 		return cn(
 			'block rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
 			active &&
@@ -53,7 +56,7 @@
 		<header
 			class="border-border bg-card flex shrink-0 items-center justify-between gap-4 border-b px-4 py-3 sm:px-6"
 		>
-			<AppBrand href="/services" />
+			<AppBrand href="/" />
 			<div class="flex min-w-0 items-center gap-3 sm:gap-4">
 				<Badge variant="secondary" class="hidden shrink-0 text-xs sm:inline-flex">
 					{auth.bootstrap?.mode ?? '…'}

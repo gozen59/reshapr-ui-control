@@ -36,7 +36,7 @@
 
 	$effect(() => {
 		if (auth.token) {
-			goto('/services', { replaceState: true });
+			goto('/', { replaceState: true });
 		}
 	});
 
@@ -99,7 +99,7 @@
 		error = null;
 		try {
 			await auth.login(username, password);
-			goto('/services', { replaceState: true });
+			goto('/', { replaceState: true });
 		} catch (e) {
 			error = e instanceof ApiError ? e.message : String(e);
 		} finally {

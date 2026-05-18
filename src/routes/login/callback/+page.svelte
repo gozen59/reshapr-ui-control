@@ -34,7 +34,7 @@
 		try {
 			auth.completeSaasLogin(token, ctrlUrl, portal);
 			done = true;
-			goto('/services', { replaceState: true });
+			goto('/', { replaceState: true });
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		}
