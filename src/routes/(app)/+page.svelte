@@ -9,11 +9,9 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Collapsible from '$lib/components/ui/collapsible';
 	import Activity from '@lucide/svelte/icons/activity';
-	import Building2 from '@lucide/svelte/icons/building-2';
 	import Layers from '@lucide/svelte/icons/layers';
 	import Network from '@lucide/svelte/icons/network';
 	import Server from '@lucide/svelte/icons/server';
-	import Users from '@lucide/svelte/icons/users';
 
 	let stats = $state<DashboardStats | null>(null);
 	let error = $state<string | null>(null);
@@ -70,10 +68,9 @@
 <Alert.Root class="mb-6">
 	<Alert.Title>v1 API limits</Alert.Title>
 	<Alert.Description class="text-sm">
-		Platform <strong>user</strong> and <strong>organization</strong> counts are not on
-		<code class="text-xs">/api/v1/*</code> (they live under <code class="text-xs">/api/admin/*</code> on reshapr).
-		Those cards stay empty until reshapr adds a dedicated endpoint. “Healthy” gateways = on an active exposition
-		with at least one FQDN (approximation without a REST heartbeat).
+		“Healthy” gateways = on an active exposition with at least one FQDN (approximation without a REST heartbeat).
+		Platform user/organization tiles are hidden until a tenant-safe API exists (see
+		<code class="text-xs">docs/issue-admin-api-platform-dashboard.md</code>).
 	</Alert.Description>
 </Alert.Root>
 
@@ -82,6 +79,7 @@
 {/if}
 
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+	<!-- Platform user/org counts: no v1 API — see docs/issue-admin-api-platform-dashboard.md
 	<Card.Root class="opacity-90">
 		<Card.Header class="flex flex-row items-center justify-between pb-2">
 			<Card.Title class="text-sm font-medium">Users (platform)</Card.Title>
@@ -105,6 +103,7 @@
 			</p>
 		</Card.Content>
 	</Card.Root>
+	-->
 
 	<Card.Root>
 		<Card.Header class="flex flex-row items-center justify-between pb-2">
