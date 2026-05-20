@@ -2,37 +2,15 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { STORAGE_KEY_SAAS_PORTAL } from '$lib/api/client';
-	import { isSaasPortalUrl, normalizeServerUrl } from '$lib/auth/saas';
+	import { completeSaasLoginFromSearchParams } from '$lib/auth/saasCallback';
 	import { Button } from '$lib/components/ui/button';
 
 	let error = $state<string | null>(null);
 	let done = $state(false);
 
 	onMount(() => {
-		const token = page.url.searchParams.get('token');
-		const ctrlUrl = page.url.searchParams.get('ctrl_url');
-		const portalParam = page.url.searchParams.get('portal');
-
-		if (!token?.length) {
-			error = 'No token received. Sign in was cancelled or failed.';
-			return;
-		}
-
-		const storedPortal = sessionStorage.getItem(STORAGE_KEY_SAAS_PORTAL) ?? '';
-		const portal =
-			portalParam && isSaasPortalUrl(portalParam)
-				? normalizeServerUrl(portalParam)
-				: auth.saasPortalUrl || storedPortal || auth.serverUrl;
-
-		if (!portal || !isSaasPortalUrl(portal)) {
-			error = 'Missing SaaS portal URL. Start sign-in from the login page again.';
-			return;
-		}
-
 		try {
-			auth.completeSaasLogin(token, ctrlUrl, portal);
+			completeSaasLoginFromSearchParams(page.url.searchParams);
 			done = true;
 			goto('/', { replaceState: true });
 		} catch (e) {

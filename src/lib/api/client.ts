@@ -22,8 +22,7 @@ export function getStoredServerUrl(): string {
 		const resolved = resolveControlPlaneBase(fromEnv);
 		if (resolved) return resolved;
 	}
-	if (import.meta.env.DEV) return '';
-	return 'http://localhost:5555';
+	return '';
 }
 
 export function getStoredToken(): string | null {
@@ -33,7 +32,10 @@ export function getStoredToken(): string | null {
 
 export function persistSession(serverUrl: string, token: string) {
 	const resolved = resolveControlPlaneBase(serverUrl);
-	if (!resolved) {
+	if (resolved === null) {
+		throw new ApiError('Invalid control plane URL', 400);
+	}
+	if (resolved === '' && !import.meta.env.DEV) {
 		throw new ApiError('Invalid control plane URL', 400);
 	}
 	sessionStorage.setItem(STORAGE_KEY_SERVER, resolved);
