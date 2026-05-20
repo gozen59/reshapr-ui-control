@@ -107,7 +107,7 @@ Commit `vercel.json` so Vercel uses output directory **`build`** and SPA fallbac
 
 1. **CORS** on your control plane: add your Vercel origin to `RESHAPR_HTTP_CORS_ORIGINS` (on-prem) or ask Reshapr for SaaS (portal + `ctrl_url` host).
 2. **Login**: enter the full control plane URL (e.g. `https://your-cp.example.com` or `https://try.reshapr.io` for SaaS).
-3. **OAuth (SaaS)**: register `https://<your-project>.vercel.app/login/callback` with the Reshapr team if required.
+3. **SaaS OAuth**: the portal only accepts **`redirect_uri` on localhost** (same as `reshapr login`). Browser sign-in from a deployed URL does not work until Reshapr allowlists your callback; then set `PUBLIC_RESHAPR_SAAS_REDIRECT_URI` at build time. Use **on-prem login** or **`npm run dev`** for SaaS in the meantime.
 
 **Optional Vercel build env**
 
