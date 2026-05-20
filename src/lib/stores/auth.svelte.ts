@@ -42,7 +42,14 @@ class AuthStore {
 
 	async login(username: string, password: string) {
 		const base = resolveControlPlaneBase(this.serverUrl);
-		if (!base) throw new Error('Enter a valid control plane URL before signing in.');
+		if (base === null) {
+			throw new Error('Enter a valid control plane URL before signing in.');
+		}
+		if (base === '' && !import.meta.env.DEV) {
+			throw new Error(
+				'Enter a valid control plane URL before signing in (e.g. http://localhost:5555).'
+			);
+		}
 		const t = await loginReshapr(base, username, password);
 		persistSession(base, t);
 		this.serverUrl = base;
