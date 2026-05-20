@@ -22,8 +22,7 @@ export function getStoredServerUrl(): string {
 		const resolved = resolveControlPlaneBase(fromEnv);
 		if (resolved) return resolved;
 	}
-	if (import.meta.env.DEV) return '';
-	return 'http://localhost:5555';
+	return '';
 }
 
 export function getStoredToken(): string | null {

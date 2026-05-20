@@ -5,7 +5,12 @@
 	import { ApiError, STORAGE_KEY_SAAS_PORTAL } from '$lib/api/client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { resolveControlPlaneBase } from '$lib/auth/controlPlaneUrl';
-	import { buildSaasLoginUrl, isSaasPortalUrl, normalizeServerUrl } from '$lib/auth/saas';
+	import {
+		buildSaasLoginUrl,
+		isSaasPortalUrl,
+		resolveSaasRedirectUri,
+		SAAS_BROWSER_LOGIN_HINT
+	} from '$lib/auth/saas';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -23,9 +28,15 @@
 	const isOnPremMode = $derived(auth.bootstrap?.mode === 'on-premises');
 	const likelySaasPortal = $derived(isSaasPortalUrl(portalUrl));
 
+	const saasRedirectUri = $derived(
+		browser ? resolveSaasRedirectUri(window.location.origin) : null
+	);
+
 	const showSaasSignIn = $derived(
 		auth.ready && portalUrl.length > 0 && (isSaasMode || (likelySaasPortal && !isOnPremMode))
 	);
+
+	const saasSignInBlocked = $derived(showSaasSignIn && !saasRedirectUri);
 
 	const showOnPremSignIn = $derived(
 		auth.ready &&
@@ -86,11 +97,15 @@
 
 	function startSaasSignIn() {
 		if (!browser || !portalUrl) return;
+		const redirectUri = resolveSaasRedirectUri(window.location.origin);
+		if (!redirectUri) {
+			error = SAAS_BROWSER_LOGIN_HINT;
+			return;
+		}
 		error = null;
 		auth.saasPortalUrl = portalUrl;
 		sessionStorage.setItem(STORAGE_KEY_SAAS_PORTAL, portalUrl);
-		const callback = `${window.location.origin}/login/callback`;
-		window.location.href = buildSaasLoginUrl(portalUrl, callback);
+		window.location.href = buildSaasLoginUrl(portalUrl, redirectUri);
 	}
 
 	async function onSubmit(ev: SubmitEvent) {
@@ -153,9 +168,18 @@
 			{/if}
 
 			{#if showSaasSignIn}
-				<Button type="button" class="w-full" size="lg" onclick={startSaasSignIn}>
+				<Button
+					type="button"
+					class="w-full"
+					size="lg"
+					disabled={saasSignInBlocked}
+					onclick={startSaasSignIn}
+				>
 					Sign in with reShapr
 				</Button>
+				{#if saasSignInBlocked}
+					<p class="text-muted-foreground text-xs">{SAAS_BROWSER_LOGIN_HINT}</p>
+				{/if}
 			{/if}
 
 			{#if showSaasSignIn && showOnPremSignIn}

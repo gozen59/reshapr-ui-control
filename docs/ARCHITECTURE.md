@@ -7,7 +7,7 @@
 | Repo | Role |
 |------|------|
 | [reshapr](https://github.com/reshaprio/reshapr) | Quarkus **control plane** + CLI — source of REST APIs used by this UI |
-| [try.reshapr.io](https://github.com/reshaprio/try.reshapr.io) (local: `GOZEN/TOOLS/try.reshapr.io`) | SaaS **portal** reference for look & feel (OKLCH theme, login card, footer, `AppBrand` typography) |
+| [try.reshapr.io](https://github.com/lbroudoux/try.reshapr.io) (prod: https://try.reshapr.io ; local: `GOZEN/TOOLS/try.reshapr.io`) | SaaS **portal** — look & feel reference (OKLCH theme, login card, footer, `AppBrand` typography) |
 
 This project is a **static SPA** (`adapter-static`, `ssr: false`). It does not embed try’s server stack (Auth.js, Drizzle, `adapter-node`). It calls an external control plane from the browser (or via the Vite dev proxy).
 
@@ -20,7 +20,7 @@ This project is a **static SPA** (`adapter-static`, `ssr: false`). It does not e
 ## Authentication
 
 - **On-premises**: `POST {server}/auth/login/reshapr` → token + server URL in `sessionStorage`.
-- **SaaS**: redirect to the portal `/cli/login` (same flow as `reshapr login -s https://try.reshapr.io`), callback on `/login/callback` with `ctrl_url` for the tenant API.
+- **SaaS**: redirect to `/cli/login` with a **localhost** `redirect_uri` (CLI-compatible). In dev, the portal returns to `http://localhost:<vite-port>?token=…`; `/login/callback` completes the session. Deployed hosts need `PUBLIC_RESHAPR_SAAS_REDIRECT_URI` allowlisted by Reshapr.
 
 Server-side CORS on the control plane: `RESHAPR_HTTP_CORS_ORIGINS` (see [`docs/reshapr-control-plane-CORS.md`](./reshapr-control-plane-CORS.md)).
 
