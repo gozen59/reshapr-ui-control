@@ -32,7 +32,10 @@ export function getStoredToken(): string | null {
 
 export function persistSession(serverUrl: string, token: string) {
 	const resolved = resolveControlPlaneBase(serverUrl);
-	if (!resolved) {
+	if (resolved === null) {
+		throw new ApiError('Invalid control plane URL', 400);
+	}
+	if (resolved === '' && !import.meta.env.DEV) {
 		throw new ApiError('Invalid control plane URL', 400);
 	}
 	sessionStorage.setItem(STORAGE_KEY_SERVER, resolved);
