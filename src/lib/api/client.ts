@@ -7,8 +7,6 @@ export { ApiError } from './errors';
 
 export const STORAGE_KEY_SERVER = 'reshapr-ui-control.serverUrl';
 export const STORAGE_KEY_TOKEN = 'reshapr-ui-control.token';
-export const STORAGE_KEY_SAAS_PORTAL = 'reshapr-ui-control.saasPortal';
-
 export function getStoredServerUrl(): string {
 	if (!browser) return '';
 	const stored = sessionStorage.getItem(STORAGE_KEY_SERVER);
@@ -45,7 +43,6 @@ export function persistSession(serverUrl: string, token: string) {
 export function clearSession() {
 	sessionStorage.removeItem(STORAGE_KEY_SERVER);
 	sessionStorage.removeItem(STORAGE_KEY_TOKEN);
-	sessionStorage.removeItem(STORAGE_KEY_SAAS_PORTAL);
 }
 
 async function parseErrorBody(res: Response): Promise<string> {

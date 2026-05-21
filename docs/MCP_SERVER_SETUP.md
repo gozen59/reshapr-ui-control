@@ -10,7 +10,7 @@ The UI path uses **Artifacts**, **Plans**, and verification pages **MCP custom t
 
 **Prerequisites**
 
-- Control plane running and UI signed in (on-prem or SaaS).
+- Control plane running and UI signed in (on-premises).
 - OpenAPI (or GraphQL) specification for the backend API.
 - Backend base URL (e.g. `https://api.example.com/v1`).
 - Optional: gateway group ID (default `1`).

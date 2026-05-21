@@ -72,7 +72,7 @@ function proxyRequest(
 	req.pipe(proxyReq);
 }
 
-/** Dev-only: proxy /api and /auth to localhost:5555 or X-Reshapr-Control-Plane (SaaS, no browser CORS). */
+/** Dev-only: proxy /api and /auth to localhost:5555 or X-Reshapr-Control-Plane (remote CP, no browser CORS). */
 export function reshaprDevProxy(): Plugin {
 	return {
 		name: 'reshapr-dev-proxy',

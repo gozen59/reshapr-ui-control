@@ -19,8 +19,8 @@ This project is a **static SPA** (`adapter-static`, `ssr: false`). It does not e
 
 ## Authentication
 
-- **On-premises**: `POST {server}/auth/login/reshapr` → token + server URL in `sessionStorage`.
-- **SaaS**: redirect to `/cli/login` with a **localhost** `redirect_uri` (CLI-compatible). In dev, the portal returns to `http://localhost:<vite-port>?token=…`; `/login/callback` completes the session. Deployed hosts need `PUBLIC_RESHAPR_SAAS_REDIRECT_URI` allowlisted by Reshapr.
+- **On-premises only**: `POST {server}/auth/login/reshapr` → token + server URL in `sessionStorage`. In dev, an empty control plane URL uses the Vite proxy to `http://localhost:5555`.
+- **SaaS** (`try.reshapr.io`, mode `saas`): not supported in this UI — use a self-hosted control plane URL.
 
 Server-side CORS on the control plane: `RESHAPR_HTTP_CORS_ORIGINS` (see [`docs/reshapr-control-plane-CORS.md`](./reshapr-control-plane-CORS.md)).
 

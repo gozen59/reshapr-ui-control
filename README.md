@@ -21,7 +21,7 @@ Open the URL printed by Vite (often `http://localhost:5173`), enter the control 
 
 In development, leave the URL empty to use the Vite proxy (`/api`, `/auth` → `localhost:5555`).
 
-**SaaS** mode does not implement browser OAuth; use the `reshapr login` CLI.
+**SaaS** (`try.reshapr.io`) is not supported — use an on-premises control plane URL only.
 
 ## Scripts
 

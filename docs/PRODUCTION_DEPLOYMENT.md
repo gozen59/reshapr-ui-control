@@ -1,4 +1,4 @@
-# Production deployment — CORS, proxy, and SaaS auth
+# Production deployment — CORS and proxy (on-premises UI)
 
 This document captures deployment options for **reshapr-ui-control** when the SPA is served separately from the control plane (Option B). It complements [`ARCHITECTURE.md`](./ARCHITECTURE.md) and [`reshapr-control-plane-CORS.md`](./reshapr-control-plane-CORS.md).
 
@@ -9,17 +9,16 @@ This document captures deployment options for **reshapr-ui-control** when the SP
 - **Development**: Vite dev proxy (`vite-plugin-reshapr-dev-proxy.ts`) forwards `/api` and `/auth` to the control plane without browser CORS.
 - **Production**: the browser enforces CORS on cross-origin requests, or you must use a **same-origin** reverse proxy.
 
-## SaaS vs on-premises URLs
+## Authentication (on-premises only)
 
-| Host | Role |
-|------|------|
-| `https://try.reshapr.io` | SaaS **portal** — bootstrap (`GET /api/config` → `mode: saas`), OAuth entry (`/cli/login`) |
-| `https://app.try.reshapr.io` | Tenant **control plane** — REST API after OAuth (`ctrl_url` from callback) |
-| `http://localhost:5555` | Local on-prem control plane (dev / `reshapr run`) |
+This UI signs in with `POST /auth/login/reshapr` (username / password) against a **self-hosted** control plane (`GET /api/config` → `mode: on-premises`).
 
-After SaaS sign-in, the UI must store and use **`ctrl_url`** as the API base (not the portal URL). This matches `cli/src/commands/login.ts`.
+SaaS hosts such as `https://try.reshapr.io` are not supported (no browser OAuth in this app).
 
-On-premises sign-in uses `POST /auth/login/reshapr` with username and password.
+| Host | Typical use |
+|------|-------------|
+| `http://localhost:5555` | Local control plane (`reshapr run`) |
+| `https://your-cp.example.com` | On-prem deployment behind your domain |
 
 ## Option 1 — CORS on the control plane
 
@@ -54,13 +53,6 @@ curl -i -X OPTIONS "https://your-control-plane.example.com/api/config" \
 
 Expect `Access-Control-Allow-Origin` matching your UI origin.
 
-### SaaS (`try.reshapr.io` / `app.try.reshapr.io`)
-
-You cannot set `RESHAPR_HTTP_CORS_ORIGINS` on the public SaaS. Request that the Reshapr team allow your UI origin on:
-
-- the portal (login / bootstrap), and
-- the tenant API host (`app.try.reshapr.io` or your `ctrl_url`).
-
 ## Option 2 — Same-origin reverse proxy (recommended for production SPA)
 
 Serve the UI and proxy API paths under **one origin** so the browser does not perform cross-origin calls.
@@ -84,20 +76,18 @@ server {
     }
 
     location /api/ {
-        proxy_pass https://app.try.reshapr.io/api/;
-        proxy_set_header Host app.try.reshapr.io;
+        proxy_pass https://your-control-plane.example.com/api/;
+        proxy_set_header Host your-control-plane.example.com;
         proxy_ssl_server_name on;
     }
 
     location /auth/ {
-        proxy_pass https://app.try.reshapr.io/auth/;
-        proxy_set_header Host app.try.reshapr.io;
+        proxy_pass https://your-control-plane.example.com/auth/;
+        proxy_set_header Host your-control-plane.example.com;
         proxy_ssl_server_name on;
     }
 }
 ```
-
-Replace `app.try.reshapr.io` with your on-prem control plane host when applicable.
 
 ### Vercel (static hosting + direct API + CORS)
 
@@ -105,9 +95,8 @@ Commit `vercel.json` so Vercel uses output directory **`build`** and SPA fallbac
 
 **Prerequisites**
 
-1. **CORS** on your control plane: add your Vercel origin to `RESHAPR_HTTP_CORS_ORIGINS` (on-prem) or ask Reshapr for SaaS (portal + `ctrl_url` host).
-2. **Login**: enter the full control plane URL (e.g. `https://your-cp.example.com` or `https://try.reshapr.io` for SaaS).
-3. **SaaS OAuth**: the portal only accepts **`redirect_uri` on localhost** (same as `reshapr login`). Browser sign-in from a deployed URL does not work until Reshapr allowlists your callback; then set `PUBLIC_RESHAPR_SAAS_REDIRECT_URI` at build time. Use **on-prem login** or **`npm run dev`** for SaaS in the meantime.
+1. **CORS** on your control plane: add your Vercel origin to `RESHAPR_HTTP_CORS_ORIGINS`.
+2. **Login**: enter your on-premises control plane URL (e.g. `https://your-cp.example.com`).
 
 **Optional Vercel build env**
 
@@ -134,7 +123,6 @@ See `docs/reshapr-WEB_UI.md` in the reshapr repository.
 | Self-hosted control plane | CORS (`RESHAPR_HTTP_CORS_ORIGINS`) or reverse proxy |
 | Your domain serves UI + proxied `/api` | Reverse proxy (Option 2) or Nginx |
 | UI on **Vercel** | Static deploy (`vercel.json`) + **CORS** on the control plane |
-| Public SaaS only, no proxy | Ask Reshapr to allow your origin in CORS |
 | Appliance / single URL | Embedded UI (Option 3) |
 | Local development | `npm run dev` + Vite proxy (already implemented) |
 
@@ -142,9 +130,7 @@ See `docs/reshapr-WEB_UI.md` in the reshapr repository.
 
 | Feature | Location |
 |---------|----------|
-| On-prem login | `POST /auth/login/reshapr` — login form |
-| SaaS OAuth | `Sign in with reShapr` → `/cli/login?redirect_uri=.../login/callback` |
-| Callback handler | `src/routes/login/callback/+page.svelte` |
+| On-prem login | `POST /auth/login/reshapr` — [`src/routes/login/+page.svelte`](../src/routes/login/+page.svelte) |
 | URL validation | `src/lib/auth/controlPlaneUrl.ts` |
 | Dev CORS bypass | `vite-plugin-reshapr-dev-proxy.ts` |
 | Vercel static deploy | `vercel.json` (SPA only; API via CORS) |
