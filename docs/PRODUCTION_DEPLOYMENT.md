@@ -89,22 +89,9 @@ server {
 }
 ```
 
-### Vercel (static hosting + direct API + CORS)
+**Static hosting (any CDN or object storage):** serve the `build/` directory with SPA fallback to `index.html`. The UI calls the control plane with **absolute URLs** (entered at login, stored in `sessionStorage`). Enable **CORS** on the control plane for your UI origin (Option 1), or use the reverse proxy above (Option 2).
 
-Commit `vercel.json` so Vercel uses output directory **`build`** and SPA fallback (`index.html` for client routes). **No** `/api` or `/auth` rewrites on Vercel — the UI calls the control plane with **absolute URLs** (URL entered at login, stored in `sessionStorage`).
-
-**Prerequisites**
-
-1. **CORS** on your control plane: add your Vercel origin to `RESHAPR_HTTP_CORS_ORIGINS`.
-2. **Login**: enter your on-premises control plane URL (e.g. `https://your-cp.example.com`).
-
-**Optional Vercel build env**
-
-| Variable | Role |
-|----------|------|
-| `PUBLIC_RESHAPR_SERVER` | Pre-fill the control plane URL on the login form |
-
-For same-origin API on Vercel later, use Option 2 (reverse proxy) in front of both UI and API, or add `vercel.json` rewrites plus UI changes — not the default in this repo.
+Optional build-time env: `PUBLIC_RESHAPR_SERVER` pre-fills the control plane URL on the login form.
 
 ## Option 3 — UI embedded in the control plane (Option A)
 
@@ -122,7 +109,7 @@ See `docs/reshapr-WEB_UI.md` in the reshapr repository.
 |----------|-------------------|
 | Self-hosted control plane | CORS (`RESHAPR_HTTP_CORS_ORIGINS`) or reverse proxy |
 | Your domain serves UI + proxied `/api` | Reverse proxy (Option 2) or Nginx |
-| UI on **Vercel** | Static deploy (`vercel.json`) + **CORS** on the control plane |
+| Static UI host (CDN, S3, etc.) | Serve `build/` + **CORS** on the control plane, or reverse proxy |
 | Appliance / single URL | Embedded UI (Option 3) |
 | Local development | `npm run dev` + Vite proxy (already implemented) |
 
@@ -133,7 +120,6 @@ See `docs/reshapr-WEB_UI.md` in the reshapr repository.
 | On-prem login | `POST /auth/login/reshapr` — [`src/routes/login/+page.svelte`](../src/routes/login/+page.svelte) |
 | URL validation | `src/lib/auth/controlPlaneUrl.ts` |
 | Dev CORS bypass | `vite-plugin-reshapr-dev-proxy.ts` |
-| Vercel static deploy | `vercel.json` (SPA only; API via CORS) |
 
 ## Related links
 
