@@ -8,7 +8,6 @@ dist
 
 # Adapter / deploy targets
 .output
-.vercel
 .netlify
 .wrangler
 
