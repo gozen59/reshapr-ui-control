@@ -1,48 +1,25 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { dev } from '$app/environment';
-	import { ApiError, STORAGE_KEY_SAAS_PORTAL } from '$lib/api/client';
+	import { ApiError } from '$lib/api/client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { resolveControlPlaneBase } from '$lib/auth/controlPlaneUrl';
-	import {
-		buildSaasLoginUrl,
-		isSaasPortalUrl,
-		resolveSaasRedirectUri,
-		SAAS_BROWSER_LOGIN_HINT
-	} from '$lib/auth/saas';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Separator } from '$lib/components/ui/separator';
 	import AppBrand from '$lib/components/AppBrand.svelte';
 
 	let username = $state('');
 	let password = $state('');
 	let error = $state<string | null>(null);
-	let bootstrapWarning = $state<string | null>(null);
 	let loading = $state(false);
 
 	const portalUrl = $derived(resolveControlPlaneBase(auth.serverUrl) ?? '');
-	const isSaasMode = $derived(auth.bootstrap?.mode === 'saas');
 	const isOnPremMode = $derived(auth.bootstrap?.mode === 'on-premises');
-	const likelySaasPortal = $derived(isSaasPortalUrl(portalUrl));
+	const isSaasMode = $derived(auth.bootstrap?.mode === 'saas');
 
-	const saasRedirectUri = $derived(
-		browser ? resolveSaasRedirectUri(window.location.origin) : null
-	);
-
-	const showSaasSignIn = $derived(
-		auth.ready && portalUrl.length > 0 && (isSaasMode || (likelySaasPortal && !isOnPremMode))
-	);
-
-	const saasSignInBlocked = $derived(showSaasSignIn && !saasRedirectUri);
-
-	const showOnPremSignIn = $derived(
-		auth.ready &&
-			(isOnPremMode ||
-				(!portalUrl && dev) ||
-				(portalUrl.length > 0 && !isSaasMode && !likelySaasPortal))
+	const showLoginForm = $derived(
+		auth.ready && (isOnPremMode || (!portalUrl && dev))
 	);
 
 	$effect(() => {
@@ -58,7 +35,6 @@
 			(async () => {
 				auth.ready = false;
 				auth.bootstrap = null;
-				bootstrapWarning = null;
 				error = null;
 
 				const resolved = resolveControlPlaneBase(url);
@@ -75,16 +51,8 @@
 					await auth.refreshBootstrap();
 				} catch (e) {
 					if (cancelled) return;
-					const msg = e instanceof ApiError ? e.message : 'Unable to reach the server';
-					const portal = resolved ?? url;
-					if (isSaasPortalUrl(portal)) {
-						bootstrapWarning =
-							'Could not read /api/config (often CORS from the browser). You can still use “Sign in with reShapr”.';
-						auth.ready = true;
-					} else {
-						error = msg;
-						auth.ready = true;
-					}
+					error = e instanceof ApiError ? e.message : 'Unable to reach the server';
+					auth.ready = true;
 				}
 			})();
 		}, 400);
@@ -94,19 +62,6 @@
 			clearTimeout(timer);
 		};
 	});
-
-	function startSaasSignIn() {
-		if (!browser || !portalUrl) return;
-		const redirectUri = resolveSaasRedirectUri(window.location.origin);
-		if (!redirectUri) {
-			error = SAAS_BROWSER_LOGIN_HINT;
-			return;
-		}
-		error = null;
-		auth.saasPortalUrl = portalUrl;
-		sessionStorage.setItem(STORAGE_KEY_SAAS_PORTAL, portalUrl);
-		window.location.href = buildSaasLoginUrl(portalUrl, redirectUri);
-	}
 
 	async function onSubmit(ev: SubmitEvent) {
 		ev.preventDefault();
@@ -128,7 +83,7 @@
 		<div class="text-center">
 			<AppBrand variant="login" />
 			<p class="mt-2 text-sm text-muted-foreground">
-				Sign in to manage your control plane — SaaS or on-premises
+				Sign in to your on-premises control plane
 			</p>
 		</div>
 
@@ -141,13 +96,12 @@
 					oninput={(e: Event & { currentTarget: HTMLInputElement }) =>
 						auth.setServerUrl(e.currentTarget.value)}
 					placeholder={dev
-						? 'https://try.reshapr.io or empty = local proxy (localhost:5555)'
-						: 'https://try.reshapr.io'}
+						? 'http://localhost:5555 or empty = Vite proxy to localhost:5555'
+						: 'https://your-control-plane.example.com'}
 					autocomplete="url"
 				/>
 				<p class="text-muted-foreground text-xs">
-					SaaS: <code class="text-xs">https://try.reshapr.io</code> — local dev: leave empty for proxy to
-					<code class="text-xs">localhost:5555</code>.
+					Local dev: leave empty to use the Vite proxy to <code class="text-xs">localhost:5555</code>.
 				</p>
 			</div>
 
@@ -158,44 +112,19 @@
 				</p>
 			{/if}
 
-			{#if bootstrapWarning}
+			{#if auth.ready && isSaasMode}
 				<div
-					class="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm text-muted-foreground"
+					class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-muted-foreground"
 					role="status"
 				>
-					{bootstrapWarning}
+					This console supports <strong>on-premises</strong> sign-in only (<code class="text-xs"
+						>POST /auth/login/reshapr</code
+					>). Use your self-hosted control plane URL, not the SaaS portal.
 				</div>
 			{/if}
 
-			{#if showSaasSignIn}
-				<Button
-					type="button"
-					class="w-full"
-					size="lg"
-					disabled={saasSignInBlocked}
-					onclick={startSaasSignIn}
-				>
-					Sign in with reShapr
-				</Button>
-				{#if saasSignInBlocked}
-					<p class="text-muted-foreground text-xs">{SAAS_BROWSER_LOGIN_HINT}</p>
-				{/if}
-			{/if}
-
-			{#if showSaasSignIn && showOnPremSignIn}
-				<div class="relative py-1">
-					<Separator />
-					<span
-						class="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs"
-					>
-						or
-					</span>
-				</div>
-			{/if}
-
-			{#if showOnPremSignIn}
+			{#if showLoginForm}
 				<form class="space-y-4 rounded-lg border bg-muted/50 p-4" onsubmit={onSubmit}>
-					<p class="text-sm font-medium">On-premises (username / password)</p>
 					<div class="space-y-2">
 						<Label for="username">Username</Label>
 						<Input id="username" bind:value={username} autocomplete="username" />
@@ -213,13 +142,10 @@
 						{loading ? 'Signing in…' : 'Sign in'}
 					</Button>
 				</form>
-			{/if}
-
-			{#if auth.ready && !showSaasSignIn && !showOnPremSignIn && portalUrl}
+			{:else if auth.ready && portalUrl && !isOnPremMode}
 				<div class="rounded-lg border bg-muted/50 p-4 text-sm text-muted-foreground">
-					Could not determine how to sign in for this URL. Use
-					<code class="text-xs">https://try.reshapr.io</code> for SaaS or a dedicated control plane URL for
-					on-premises.
+					Enter the URL of an <strong>on-premises</strong> control plane (bootstrap mode must be
+					<code class="text-xs">on-premises</code>).
 				</div>
 			{/if}
 

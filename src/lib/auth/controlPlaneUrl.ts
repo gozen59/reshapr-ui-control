@@ -51,7 +51,7 @@ export function apiUrl(base: string, path: string): string {
 	return `${resolved}${p}`;
 }
 
-/** In dev, target origin for the Vite proxy (SaaS / remote control planes). */
+/** In dev, target origin for the Vite proxy (remote control planes). */
 export function devProxyHeaders(base: string): HeadersInit {
 	if (!import.meta.env.DEV) return {};
 	const resolved = resolveControlPlaneBase(base);
