@@ -5,13 +5,20 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
+	import {
+		Collapsible,
+		CollapsibleContent,
+		CollapsibleTrigger
+	} from '$lib/components/ui/collapsible';
 	import AppBrand from '$lib/components/AppBrand.svelte';
 	import { cn } from '$lib/utils';
+	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
 	let { children } = $props();
 
-	const nav = [
-		{ href: '/', label: 'Dashboard' },
+	const nav = [{ href: '/', label: 'Dashboard' }] as const;
+
+	const experimentalNav = [
 		{ href: '/services', label: 'Services' },
 		{ href: '/artifacts', label: 'Artifacts' },
 		{ href: '/plans', label: 'Plans' },
@@ -24,20 +31,34 @@
 		{ href: '/api-tokens', label: 'API tokens' }
 	] as const;
 
-	function navClass(href: string): string {
-		const path = page.url.pathname;
-		const active =
-			href === '/'
-				? path === '/'
-				: path === href ||
+	function isNavActive(href: string, path = page.url.pathname): boolean {
+		return href === '/'
+			? path === '/'
+			: path === href ||
 					path.startsWith(href + '/') ||
 					(href === '/plans' && path.startsWith('/plans'));
+	}
+
+	function isExperimentalActive(path = page.url.pathname): boolean {
+		return experimentalNav.some((item) => isNavActive(item.href, path));
+	}
+
+	function navClass(href: string): string {
+		const active = isNavActive(href);
 		return cn(
 			'block rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
 			active &&
 				'bg-primary/10 font-medium text-primary hover:bg-primary/15 hover:text-primary'
 		);
 	}
+
+	let experimentalOpen = $state(isExperimentalActive());
+
+	$effect(() => {
+		if (isExperimentalActive(page.url.pathname)) {
+			experimentalOpen = true;
+		}
+	});
 
 	$effect(() => {
 		if (browser && !auth.token) {
@@ -79,6 +100,29 @@
 					{#each nav as item (item.href)}
 						<a href={item.href} class={navClass(item.href)}>{item.label}</a>
 					{/each}
+
+					<Collapsible bind:open={experimentalOpen} class="mt-2">
+						<CollapsibleTrigger
+							class={cn(
+								'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+								isExperimentalActive() &&
+									'bg-primary/10 font-medium text-primary hover:bg-primary/15 hover:text-primary'
+							)}
+						>
+							<span>Experimental</span>
+							<ChevronDownIcon
+								class={cn(
+									'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+									experimentalOpen && 'rotate-180'
+								)}
+							/>
+						</CollapsibleTrigger>
+						<CollapsibleContent class="space-y-0.5 pt-0.5 pl-2">
+							{#each experimentalNav as item (item.href)}
+								<a href={item.href} class={navClass(item.href)}>{item.label}</a>
+							{/each}
+						</CollapsibleContent>
+					</Collapsible>
 				</nav>
 				<div class="border-sidebar-border border-t p-3 lg:hidden">
 					<p
