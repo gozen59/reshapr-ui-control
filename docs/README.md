@@ -3,7 +3,8 @@
 | Document | Contents |
 |----------|----------|
 | [MCP_SERVER_SETUP.md](./MCP_SERVER_SETUP.md) | Step-by-step: import, included operations, custom tools, prompts, verify |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Auth, env vars, MVP scope, UI shell, integration with reshapr |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Auth, env vars, Release 1 service hub, admin gating, Experimental, UI shell |
+| [issue-admin-api-platform-dashboard.md](./issue-admin-api-platform-dashboard.md) | Release 2 upstream gaps (admin lists, OIDC) |
 | [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) | Production CORS, reverse proxy (on-prem UI) |
 | [reshapr-WEB_UI.md](./reshapr-WEB_UI.md) | Product notes: Option B hosting, CORS, MVP (from reshapr `docs/WEB_UI.md`) |
 | [reshapr-control-plane-CORS.md](./reshapr-control-plane-CORS.md) | Quarkus CORS excerpt (live config is in the reshapr repo) |

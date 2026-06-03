@@ -26,9 +26,12 @@ Open the Vite URL (often `http://localhost:5173`). Leave the control plane URL e
 | Path | Role |
 |------|------|
 | `src/routes/` | Pages (`login`, `(app)/*`) |
-| `src/routes/(app)/+layout.svelte` | Shell: light header + sidebar + `<main>` (try.reshapr.io-style) |
+| `src/routes/(app)/+layout.svelte` | Shell: header, sidebar (Release 1 + Administration + Experimental), `<main>` |
+| `src/routes/(app)/services/[id]/` | Service hub: layout + sub-routes (overview, artifacts, plans, expositions, MCP) |
 | `src/lib/api/client.ts` | REST client (paths aligned with the CLI) |
-| `src/lib/stores/auth.svelte.ts` | Session (`sessionStorage`) |
+| `src/lib/stores/auth.svelte.ts` | Session (`sessionStorage`), bootstrap, admin gating |
+| `src/lib/auth/jwtClaims.ts` | JWT display claims |
+| `src/lib/serviceHub.ts`, `src/lib/serviceContext.ts` | Per-service data for the hub |
 | `src/lib/mcp*.ts` | MCP URL / custom tools / prompts via control plane |
 | `src/lib/components/` | App components (`AppBrand`, `AppFooter`, `PageHeader`, …) |
 | `src/lib/components/ui/` | shadcn-svelte primitives |

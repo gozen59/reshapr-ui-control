@@ -16,9 +16,12 @@ This workspace is the **SvelteKit + Tailwind + shadcn-svelte** web console for a
 
 The SPA helps operators:
 
-- browse services, expositions, plans, artifacts, secrets, etc. via the same REST surface as the CLI
-- resolve **MCP custom tools** from an MCP URL using control-plane APIs (`/mcp-custom-tools`)
-- list **MCP prompts** via JSON-RPC on the endpoint (`/mcp-prompts`: `initialize` + `prompts/list`; browser CORS applies)
+- **Release 1**: sign-in (on-prem), account (JWT), **services** list and per-service hub (`/services/[id]/*`: artifacts, plans, expositions, MCP tools/prompts)
+- **Experimental**: global import/attach, plans, expositions, MCP URL pickers, secrets, gateways, quotas, API tokens
+- **Administration** (platform admins only): placeholder org/user pages until upstream APIs exist
+- resolve **MCP custom tools** and **MCP prompts** via control-plane artifacts (global pages or per-service tabs; not direct browser JSON-RPC to the gateway)
+
+See `docs/ARCHITECTURE.md` for navigation and env vars (`PUBLIC_RESHAPR_PLATFORM_ADMIN_USERNAMES`).
 
 ## Safety and behavior
 

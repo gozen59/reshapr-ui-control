@@ -67,6 +67,12 @@ export async function fetchBootstrap(serverUrl: string) {
 		mode: string;
 		version: string;
 		buildTimestamp?: string;
+		internalIDPUrl?: string | null;
+		authenticationConfig?: {
+			enabled: boolean;
+			url: string;
+			realm: string;
+		} | null;
 	}>;
 }
 

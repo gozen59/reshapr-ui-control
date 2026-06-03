@@ -16,10 +16,18 @@
 
 	let { children } = $props();
 
-	const nav = [{ href: '/', label: 'Dashboard' }] as const;
+	const nav = [
+		{ href: '/', label: 'Dashboard' },
+		{ href: '/services', label: 'Services' },
+		{ href: '/account', label: 'Account' }
+	] as const;
+
+	const adminNav = [
+		{ href: '/admin/organizations', label: 'Organizations' },
+		{ href: '/admin/users', label: 'Users' }
+	] as const;
 
 	const experimentalNav = [
-		{ href: '/services', label: 'Services' },
 		{ href: '/artifacts', label: 'Artifacts' },
 		{ href: '/plans', label: 'Plans' },
 		{ href: '/expositions', label: 'Expositions' },
@@ -32,11 +40,19 @@
 	] as const;
 
 	function isNavActive(href: string, path = page.url.pathname): boolean {
-		return href === '/'
-			? path === '/'
-			: path === href ||
-					path.startsWith(href + '/') ||
-					(href === '/plans' && path.startsWith('/plans'));
+		if (href === '/') return path === '/';
+		if (href === '/services') {
+			return path === '/services' || path.startsWith('/services/');
+		}
+		return (
+			path === href ||
+			path.startsWith(href + '/') ||
+			(href === '/plans' && path.startsWith('/plans'))
+		);
+	}
+
+	function isAdminActive(path = page.url.pathname): boolean {
+		return path.startsWith('/admin');
 	}
 
 	function isExperimentalActive(path = page.url.pathname): boolean {
@@ -52,9 +68,13 @@
 		);
 	}
 
+	let adminOpen = $state(isAdminActive());
 	let experimentalOpen = $state(isExperimentalActive());
 
 	$effect(() => {
+		if (isAdminActive(page.url.pathname)) {
+			adminOpen = true;
+		}
 		if (isExperimentalActive(page.url.pathname)) {
 			experimentalOpen = true;
 		}
@@ -63,6 +83,14 @@
 	$effect(() => {
 		if (browser && !auth.token) {
 			goto('/login', { replaceState: true });
+		}
+	});
+
+	$effect(() => {
+		if (browser && auth.token && !auth.bootstrap) {
+			void auth.refreshBootstrap().catch(() => {
+				/* mode badge may stay empty; API calls still use Bearer token */
+			});
 		}
 	});
 
@@ -79,11 +107,19 @@
 		>
 			<AppBrand href="/" />
 			<div class="flex min-w-0 items-center gap-3 sm:gap-4">
+				{#if auth.displayName}
+					<span
+						class="text-muted-foreground hidden max-w-[10rem] truncate text-xs sm:inline"
+						title={auth.userClaims?.email ?? auth.displayName}
+					>
+						Signed in as <span class="text-foreground font-medium">{auth.displayName}</span>
+					</span>
+				{/if}
 				<Badge variant="secondary" class="hidden shrink-0 text-xs sm:inline-flex">
 					{auth.bootstrap?.mode ?? '…'}
 				</Badge>
 				<span
-					class="text-muted-foreground hidden max-w-[14rem] truncate text-xs md:inline"
+					class="text-muted-foreground hidden max-w-[14rem] truncate text-xs lg:inline"
 					title={auth.serverUrl || '(proxy)'}
 				>
 					{auth.serverUrl || '(proxy)'}
@@ -100,6 +136,31 @@
 					{#each nav as item (item.href)}
 						<a href={item.href} class={navClass(item.href)}>{item.label}</a>
 					{/each}
+
+					{#if auth.isPlatformAdmin}
+						<Collapsible bind:open={adminOpen} class="mt-2">
+							<CollapsibleTrigger
+								class={cn(
+									'flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+									isAdminActive() &&
+										'bg-primary/10 font-medium text-primary hover:bg-primary/15 hover:text-primary'
+								)}
+							>
+								<span>Administration</span>
+								<ChevronDownIcon
+									class={cn(
+										'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
+										adminOpen && 'rotate-180'
+									)}
+								/>
+							</CollapsibleTrigger>
+							<CollapsibleContent class="space-y-0.5 pt-0.5 pl-2">
+								{#each adminNav as item (item.href)}
+									<a href={item.href} class={navClass(item.href)}>{item.label}</a>
+								{/each}
+							</CollapsibleContent>
+						</Collapsible>
+					{/if}
 
 					<Collapsible bind:open={experimentalOpen} class="mt-2">
 						<CollapsibleTrigger

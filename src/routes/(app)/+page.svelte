@@ -4,7 +4,6 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { loadDashboardStats, type DashboardStats } from '$lib/dashboardStats';
 	import { auth } from '$lib/stores/auth.svelte';
-	import * as Alert from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import * as Collapsible from '$lib/components/ui/collapsible';
@@ -65,15 +64,6 @@
 	{/if}
 </p>
 
-<Alert.Root class="mb-6">
-	<Alert.Title>v1 API limits</Alert.Title>
-	<Alert.Description class="text-sm">
-		“Healthy” gateways = on an active exposition with at least one FQDN (approximation without a REST heartbeat).
-		Platform user/organization tiles are hidden until a tenant-safe API exists (see
-		<code class="text-xs">docs/issue-admin-api-platform-dashboard.md</code>).
-	</Alert.Description>
-</Alert.Root>
-
 {#if error}
 	<ApiErrorAlert message={error} />
 {/if}
@@ -113,6 +103,9 @@
 		<Card.Content>
 			<p class="text-3xl font-bold tracking-tight">{fmt(stats?.serviceCount)}</p>
 			<p class="text-muted-foreground mt-1 text-xs">Registered (current organization)</p>
+			<a href="/services" class="text-primary mt-2 inline-block text-xs font-medium hover:underline">
+				View services
+			</a>
 		</Card.Content>
 	</Card.Root>
 
