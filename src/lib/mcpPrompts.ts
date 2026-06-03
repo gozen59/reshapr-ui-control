@@ -115,31 +115,22 @@ export function parseReshaprPromptsYaml(content: string): McpPromptDescriptor[] 
   return prompts
 }
 
-export async function resolveMcpPromptsFromUrl(
-  mcpUrl: string,
+export async function resolveMcpPromptsForService(
+  serviceId: string,
   client: McpPromptsClient,
 ): Promise<McpPromptsResolution> {
-  const { orgId, serviceName, version } = parseMcpUrl(mcpUrl)
-  const services = (await listAllServices(client)) as ServiceRow[]
-  const service = services.find(
-    (s) =>
-      s &&
-      s.organizationId === orgId &&
-      s.name === serviceName &&
-      s.version === version,
-  )
-  if (!service?.id) {
-    throw new Error(`Service not found for ${orgId} / ${serviceName} / ${version}`)
-  }
-
-  const artifacts = (await client.listArtifactsByService(service.id)) as ArtifactRow[]
+  const artifacts = (await client.listArtifactsByService(serviceId)) as ArtifactRow[]
   const promptArtifacts = (Array.isArray(artifacts) ? artifacts : []).filter(
     (a) => a?.type === 'RESHAPR_PROMPTS' && a.content,
   )
   if (promptArtifacts.length === 0) {
-    throw new Error(
-      'No RESHAPR_PROMPTS artifact on this service. Attach a kind: Prompts YAML on Artifacts, then retry.',
-    )
+    return {
+      prompts: [],
+      source: 'artifacts_prompts',
+      serviceId,
+      artifactNames: [],
+      artifactYamls: [],
+    }
   }
 
   const byName = new Map<string, McpPromptDescriptor>()
@@ -159,8 +150,28 @@ export async function resolveMcpPromptsFromUrl(
   return {
     prompts: [...byName.values()],
     source: 'artifacts_prompts',
-    serviceId: service.id,
+    serviceId,
     artifactNames,
     artifactYamls,
   }
+}
+
+export async function resolveMcpPromptsFromUrl(
+  mcpUrl: string,
+  client: McpPromptsClient,
+): Promise<McpPromptsResolution> {
+  const { orgId, serviceName, version } = parseMcpUrl(mcpUrl)
+  const services = (await listAllServices(client)) as ServiceRow[]
+  const service = services.find(
+    (s) =>
+      s &&
+      s.organizationId === orgId &&
+      s.name === serviceName &&
+      s.version === version,
+  )
+  if (!service?.id) {
+    throw new Error(`Service not found for ${orgId} / ${serviceName} / ${version}`)
+  }
+
+  return resolveMcpPromptsForService(service.id, client)
 }

@@ -16,6 +16,7 @@ This project is a **static SPA** (`adapter-static`, `ssr: false`). It does not e
 | Variable | Role |
 |----------|------|
 | `PUBLIC_RESHAPR_SERVER` | Default control plane URL in the UI (e.g. `http://localhost:5555`). The user can change it before signing in. In dev, if unset, the Vite proxy serves `/api` and `/auth`. |
+| `PUBLIC_RESHAPR_PLATFORM_ADMIN_USERNAMES` | Optional comma-separated usernames that may see the **Administration** sidebar (interim on-prem until the control plane issues `platform-admin` JWT groups). Example: `admin`. |
 
 ## Authentication
 
@@ -24,12 +25,65 @@ This project is a **static SPA** (`adapter-static`, `ssr: false`). It does not e
 
 Server-side CORS on the control plane: `RESHAPR_HTTP_CORS_ORIGINS` (see [`docs/reshapr-control-plane-CORS.md`](./reshapr-control-plane-CORS.md)).
 
-## MVP scope (implemented in navigation)
+## Product releases (navigation)
+
+### Release 1 (supported)
+
+Main sidebar (not under Experimental):
+
+| Screen | Route | APIs / data |
+|--------|-------|-------------|
+| Dashboard | `/` | Aggregated `/api/v1/*` stats (org-scoped) |
+| Services list | `/services` | `GET /api/v1/services` |
+| Service hub | `/services/[id]` and sub-routes below | Per-service aggregation (`src/lib/serviceHub.ts`) |
+| Account | `/account` | JWT claims from session token (no `/api/v1/me` yet) |
+
+**Service hub** (`src/routes/(app)/services/[id]/`): horizontal sub-nav + overview dashboard. Each service exposes:
+
+| Sub-route | Content |
+|-----------|---------|
+| `/services/[id]` | Overview cards (counts) + collapsible raw service JSON |
+| `/services/[id]/artifacts` | `GET /api/v1/artifacts/service/{id}` |
+| `/services/[id]/plans` | Configuration plans filtered by `serviceId` |
+| `/services/[id]/expositions` | Active / all expositions for the service |
+| `/services/[id]/mcp-custom-tools` | Resolved tools (`src/lib/mcpCustomTools.ts`) |
+| `/services/[id]/mcp-prompts` | Resolved prompts (`src/lib/mcpPrompts.ts`); empty list if no `RESHAPR_PROMPTS` artifact (no error banner) |
+
+Import, attach, plan create, and global MCP URL pickers remain under **Experimental**; service sub-pages link there when needed.
+
+- **Sign-in**: on-prem `POST /auth/login/reshapr` (username/password).
+- **Session**: token + control plane URL in `sessionStorage`; profile via `src/lib/auth/jwtClaims.ts` (display-only, no signature verification).
+- **Header**: signed-in username when available; bootstrap `mode` refreshed on app load if a token exists.
+- **Administration** (sidebar): only for platform admins — JWT groups/roles (`platform-admin`, `platform_admin`, `admin`) or `PUBLIC_RESHAPR_PLATFORM_ADMIN_USERNAMES`. Routes `/admin/organizations`, `/admin/users` are placeholders until upstream list APIs exist.
+
+### Experimental
+
+Collapsible **Experimental** section — advanced operator flows (unchanged behavior):
+
+- Artifacts, configuration plans, expositions, MCP custom tools, MCP prompts, secrets, gateway groups, quotas, API tokens.
+
+### Release 2 (planned, blocked upstream)
+
+- OIDC / external IDP sign-in for platform admins (see [`issue-admin-api-platform-dashboard.md`](./issue-admin-api-platform-dashboard.md)).
+- Platform **organizations** and **users** lists for admins — placeholder routes under `/admin/*` until tenant-safe APIs exist.
+
+## MVP scope (API surface)
 
 - **P0**: bootstrap on login, services, import / attach artifacts, plans, expositions (active list + all + create + detail + delete).
 - **P1**: secrets, gateway groups, quotas, API tokens.
 - **MCP**: custom tools (control-plane REST), prompts (control-plane `RESHAPR_PROMPTS` artifact).
 - **Dashboard**: home stats aggregated from existing `/api/v1/*` only (no control-plane patches).
+
+## Key libraries (UI)
+
+| Module | Role |
+|--------|------|
+| `src/lib/api/client.ts` | Bearer client for `/api/v1/*`, bootstrap, login |
+| `src/lib/stores/auth.svelte.ts` | Session, bootstrap, `userClaims`, `isPlatformAdmin` |
+| `src/lib/auth/jwtClaims.ts` | Parse JWT payload for Account / admin gating |
+| `src/lib/serviceHub.ts` | Service overview counts and filters |
+| `src/lib/serviceContext.ts` | Layout context for `/services/[id]/*` |
+| `src/lib/mcpCustomTools.ts`, `src/lib/mcpPrompts.ts` | MCP resolution by URL or by `serviceId` |
 
 ## UI shell and theme (aligned with try.reshapr.io)
 

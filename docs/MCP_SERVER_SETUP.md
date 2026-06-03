@@ -196,14 +196,14 @@ prompts:
     result: Get details for pastry '${name}'
 ```
 
-**Verify:** [MCP prompts](/mcp-prompts) — same MCP URL; listing uses artifact `RESHAPR_PROMPTS` on the control plane.
+**Verify:** [MCP prompts](/mcp-prompts) (global) or **Services → {service} → MCP prompts** — listing uses artifact `RESHAPR_PROMPTS` on the control plane. If no prompts artifact is attached, the UI shows an empty list (not an error).
 
 ---
 
 ## Step 5 — Verify the MCP endpoint
 
 1. **Expositions** — confirm an active exposition for your plan and gateway.
-2. **MCP custom tools** / **MCP prompts** — **List MCP URLs**, pick your exposition, run **List**.
+2. **MCP custom tools** / **MCP prompts** (Experimental) or the matching tabs under **Services → {service}** — list tools/prompts; optionally use **List MCP URLs** on the global pages to pick an exposition.
 3. Connect an MCP client (Cursor, Claude Desktop, etc.) to the MCP URL shown.
 
 MCP URL shape:

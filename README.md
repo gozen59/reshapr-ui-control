@@ -33,11 +33,24 @@ In development, leave the URL empty to use the Vite proxy (`/api`, `/auth` → `
 | `npm run check` | Typecheck (svelte-check) |
 | `npm run test` | Unit tests (Vitest) |
 
+## Navigation (summary)
+
+After sign-in:
+
+- **Dashboard**, **Services** (per-service hub with artifacts, plans, expositions, MCP tools/prompts), **Account**
+- **Administration** — only for platform admins (JWT role or `PUBLIC_RESHAPR_PLATFORM_ADMIN_USERNAMES`)
+- **Experimental** — import/attach, global plan/expo/MCP flows, secrets, gateways, quotas, API tokens
+
+See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for routes and APIs.
+
 ## Environment
 
 | Variable | Role |
 |----------|------|
 | `PUBLIC_RESHAPR_SERVER` | Default control plane URL (optional; user can override at sign-in) |
+| `PUBLIC_RESHAPR_PLATFORM_ADMIN_USERNAMES` | Optional interim admin menu (comma-separated usernames, e.g. `admin`) |
+
+Copy [`.env.example`](./.env.example) for local overrides.
 
 ## Documentation
 

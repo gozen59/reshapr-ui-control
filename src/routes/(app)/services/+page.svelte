@@ -89,7 +89,7 @@
 					<Table.Cell>{s.type}</Table.Cell>
 					<Table.Cell>{s.age}</Table.Cell>
 					<Table.Cell>
-						<Button variant="outline" size="sm" href="/services/{s.id}">Details</Button>
+						<Button variant="outline" size="sm" href="/services/{s.id}">Open</Button>
 					</Table.Cell>
 				</Table.Row>
 			{/each}

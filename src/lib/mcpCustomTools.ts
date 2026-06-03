@@ -222,6 +222,111 @@ type ServiceView = {
   operations?: { name?: string }[]
 }
 
+async function resolveExpositionForService(
+  client: McpCustomToolsClient,
+  serviceId: string,
+  mcpHost?: string,
+): Promise<ExpoDetail | null> {
+  if (mcpHost) {
+    const raw = await resolveExpositionForMcp(client, serviceId, mcpHost)
+    return raw as ExpoDetail | null
+  }
+  const active = (await client.listExpositionsActive()) as ExpoListRow[]
+  const activeList = Array.isArray(active) ? active : []
+  const fromActive = pickNewestExposition(
+    activeList.filter((e) => e?.service?.id === serviceId),
+  )
+  if (fromActive?.id) {
+    return (await client.getExposition(fromActive.id)) as ExpoDetail
+  }
+  const all = (await client.listExpositionsAll()) as ExpoListRow[]
+  const allList = Array.isArray(all) ? all : []
+  const fromAll = pickNewestExposition(allList.filter((e) => e?.service?.id === serviceId))
+  if (!fromAll?.id) return null
+  return (await client.getExposition(fromAll.id)) as ExpoDetail
+}
+
+export async function resolveMcpCustomToolsForService(
+  serviceId: string,
+  client: McpCustomToolsClient,
+  options?: { exposition?: ExpoDetail | null },
+): Promise<McpCustomToolsResolution> {
+  const view = (await client.getService(serviceId)) as ServiceRow & ServiceView
+  if (!view?.id) {
+    throw new Error(`Service not found: ${serviceId}`)
+  }
+  const expo =
+    options && 'exposition' in options
+      ? (options.exposition ?? null)
+      : await resolveExpositionForService(client, serviceId)
+  if (!expo?.id) {
+    const artifacts = (await client.listArtifactsByService(serviceId)) as ArtifactRow[]
+    const artifactList = Array.isArray(artifacts) ? artifacts : []
+    const yamlArtifact = artifactList.find((a) => a && a.type === 'RESHAPR_CUSTOM_TOOLS' && a.content)
+    const customParsed = parseReshaprCustomToolsYaml(yamlArtifact?.content || '')
+    if (customParsed.length > 0) {
+      const customOut: McpCustomToolRow[] = customParsed.map((t) => ({
+        name: t.name,
+        description: t.description || '',
+        inputSchema: (t.inputSchema || { type: 'object', properties: {} }) as Record<string, unknown>,
+      }))
+      return {
+        tools: customOut,
+        source: 'artifacts_custom_tools',
+        expoId: '',
+        serviceId,
+        artifactYaml: yamlArtifact?.content ?? undefined,
+      }
+    }
+    const ops = Array.isArray(view?.operations) ? view.operations : []
+    const restOut: McpCustomToolRow[] = ops.map((op) => ({
+      name: toolNameFromOperation(String(op.name)),
+      description: String(op.name),
+      inputSchema: { type: 'object' },
+    }))
+    return {
+      tools: restOut,
+      source: 'services_operations',
+      expoId: '',
+      serviceId,
+    }
+  }
+  const included = includedOperationsList(expo.configurationPlan?.includedOperations)
+  const artifacts = (await client.listArtifactsByService(serviceId)) as ArtifactRow[]
+  const artifactList = Array.isArray(artifacts) ? artifacts : []
+  const yamlArtifact = artifactList.find((a) => a && a.type === 'RESHAPR_CUSTOM_TOOLS' && a.content)
+  const customParsed = parseReshaprCustomToolsYaml(yamlArtifact?.content || '')
+  const customFiltered = filterCustomToolsByIncluded(customParsed, included)
+  const customOut: McpCustomToolRow[] = customFiltered.map((t) => ({
+    name: t.name,
+    description: t.description || '',
+    inputSchema: (t.inputSchema || { type: 'object', properties: {} }) as Record<string, unknown>,
+  }))
+  if (customOut.length > 0) {
+    return {
+      tools: customOut,
+      source: 'artifacts_custom_tools',
+      expoId: expo.id,
+      serviceId,
+      artifactYaml: yamlArtifact?.content ?? undefined,
+    }
+  }
+  const ops = Array.isArray(view?.operations) ? view.operations : []
+  const includedSet = new Set(included)
+  const restOps = included.length ? ops.filter((o) => o && includedSet.has(String(o.name))) : ops
+  const restOut: McpCustomToolRow[] = restOps.map((op) => ({
+    name: toolNameFromOperation(String(op.name)),
+    description: String(op.name),
+    inputSchema: { type: 'object' },
+  }))
+  return {
+    tools: restOut,
+    source: 'services_operations',
+    expoId: expo.id,
+    serviceId,
+  }
+}
+
 export async function resolveMcpCustomToolsFromUrl(
   mcpUrl: string,
   client: McpCustomToolsClient,
@@ -238,46 +343,11 @@ export async function resolveMcpCustomToolsFromUrl(
   if (!service?.id) {
     throw new Error(`Service not found for ${orgId} / ${serviceName} / ${version}`)
   }
-  const expoRaw = await resolveExpositionForMcp(client, service.id, host)
-  const expo = expoRaw as ExpoDetail | null
-  if (!expo?.id) {
+  const expoRaw = await resolveExpositionForService(client, service.id, host)
+  if (!expoRaw?.id) {
     throw new Error(
       'No exposition (active or full list) has FQDNs matching the MCP URL host for this service',
     )
   }
-  const included = includedOperationsList(expo.configurationPlan?.includedOperations)
-  const artifacts = (await client.listArtifactsByService(service.id)) as ArtifactRow[]
-  const artifactList = Array.isArray(artifacts) ? artifacts : []
-  const yamlArtifact = artifactList.find((a) => a && a.type === 'RESHAPR_CUSTOM_TOOLS' && a.content)
-  const customParsed = parseReshaprCustomToolsYaml(yamlArtifact?.content || '')
-  const customFiltered = filterCustomToolsByIncluded(customParsed, included)
-  const customOut: McpCustomToolRow[] = customFiltered.map((t) => ({
-    name: t.name,
-    description: t.description || '',
-    inputSchema: (t.inputSchema || { type: 'object', properties: {} }) as Record<string, unknown>,
-  }))
-  if (customOut.length > 0) {
-    return {
-      tools: customOut,
-      source: 'artifacts_custom_tools',
-      expoId: expo.id,
-      serviceId: service.id,
-      artifactYaml: yamlArtifact?.content ?? undefined,
-    }
-  }
-  const view = (await client.getService(service.id)) as ServiceView
-  const ops = Array.isArray(view?.operations) ? view.operations : []
-  const includedSet = new Set(included)
-  const restOps = included.length ? ops.filter((o) => o && includedSet.has(String(o.name))) : []
-  const restOut: McpCustomToolRow[] = restOps.map((op) => ({
-    name: toolNameFromOperation(String(op.name)),
-    description: String(op.name),
-    inputSchema: { type: 'object' },
-  }))
-  return {
-    tools: restOut,
-    source: 'services_operations',
-    expoId: expo.id,
-    serviceId: service.id,
-  }
+  return resolveMcpCustomToolsForService(service.id, client, { exposition: expoRaw })
 }

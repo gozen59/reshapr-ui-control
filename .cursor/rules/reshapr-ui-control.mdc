@@ -14,7 +14,7 @@ alwaysApply: true
 ## Read first
 
 1. [`CONTRIBUTING.md`](../CONTRIBUTING.md) — layout, stack, PR checklist
-2. [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — auth, env, MVP, UI shell / split theme
+2. [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) — auth, Release 1 service hub, admin gating, Experimental, UI shell
 3. [`docs/plans/api_cli_et_ui_web.md`](../docs/plans/api_cli_et_ui_web.md) — control-plane REST map
 4. [`docs/reshapr-WEB_UI.md`](../docs/reshapr-WEB_UI.md) — CORS, MVP product notes
 5. [`docs/reshapr-control-plane-CORS.md`](../docs/reshapr-control-plane-CORS.md) — Quarkus CORS excerpt
